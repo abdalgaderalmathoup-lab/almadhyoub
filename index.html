@@ -31,7 +31,6 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-
         body { background-color: var(--phone-bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px 5px; }
 
         /* ===== Auth Screen ===== */
@@ -41,30 +40,20 @@
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 9999; padding: 20px; color: #fff;
         }
-        .auth-card {
-            background: #fff; width: 100%; max-width: 350px; border-radius: 15px; padding: 25px;
-            color: var(--text-dark); box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
+        .auth-card { background: #fff; width: 100%; max-width: 350px; border-radius: 15px; padding: 25px; color: var(--text-dark); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .auth-logo { font-size: 40px; text-align: center; margin-bottom: 10px; }
         .auth-title { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 20px; color: var(--header-blue); }
         .auth-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; outline: none; background: #f8fafc; }
         .auth-input:focus { border-color: var(--header-blue); background: #fff; }
         .auth-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
         .auth-btn-primary { background: var(--header-blue); color: #fff; }
-        .auth-btn-primary:hover { background: #084d82; }
         .auth-btn-secondary { background: transparent; color: var(--header-blue); border: 2px solid var(--header-blue); }
-        .auth-error { color: var(--danger); font-size: 12px; text-align: center; margin-bottom: 10px; display: none; font-weight: bold; }
+        .auth-error { color: var(--danger); font-size: 12px; text-align: center; margin-bottom: 10px; display: none; font-weight: bold; background: #fee2e2; padding: 8px; border-radius: 6px; }
         .auth-loading { display: none; text-align: center; color: var(--header-blue); font-weight: bold; margin-top: 10px; }
 
         /* ===== App UI ===== */
-        .phone-wrapper {
-            width: 100%; max-width: 412px; height: min(860px, calc(100vh - 20px));
-            background: #000; border-radius: 44px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8), 0 0 0 10px #1e293b;
-            display: none; /* Hidden until login */
-            flex-direction: column; overflow: hidden; position: relative;
-        }
+        .phone-wrapper { width: 100%; max-width: 412px; height: min(860px, calc(100vh - 20px)); background: #000; border-radius: 44px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8), 0 0 0 10px #1e293b; display: none; flex-direction: column; overflow: hidden; position: relative; }
         .phone-wrapper.active { display: flex; }
-
         .status-bar { height: 24px; background: var(--header-dark-blue); color: #fff; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; font-size: 11px; font-weight: 600; z-index: 100; }
         .main-header { height: 54px; background: linear-gradient(180deg, var(--header-blue) 0%, #084d82 100%); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); z-index: 99; }
         .header-title-area { display: flex; align-items: center; gap: 12px; }
@@ -154,8 +143,8 @@
             <div class="auth-logo">📘</div>
             <div class="auth-title">المذيوب للمحاسبة</div>
             <div class="auth-error" id="auth-error"></div>
-            <input type="email" id="auth-email" class="auth-input" placeholder="البريد الإلكتروني" required>
-            <input type="password" id="auth-password" class="auth-input" placeholder="كلمة المرور" required>
+            <input type="email" id="auth-email" class="auth-input" placeholder="البريد الإلكتروني" autocomplete="off" required>
+            <input type="password" id="auth-password" class="auth-input" placeholder="كلمة المرور" autocomplete="new-password" required>
             <button class="auth-btn auth-btn-primary" id="btn-login" onclick="handleLogin()">تسجيل الدخول</button>
             <button class="auth-btn auth-btn-secondary" id="btn-signup" onclick="handleSignup()">إنشاء حساب جديد</button>
             <div class="auth-loading" id="auth-loading">جاري التحميل...</div>
@@ -464,7 +453,6 @@
             const t = document.createElement('div'); t.className = 'toast'; t.style.background = colors[type] || colors.info; t.textContent = msg;
             c.appendChild(t); setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; }, 2200); setTimeout(() => t.remove(), 2600);
         }
-
         function loadSafe(key, fallback) {
             try { const v = localStorage.getItem(key); if (!v) return fallback; const p = JSON.parse(v); return p == null ? fallback : p; } catch (e) { return fallback; }
         }
@@ -480,11 +468,11 @@
         function showAuthError(msg) {
             authError.textContent = msg;
             authError.style.display = 'block';
-            setTimeout(() => authError.style.display = 'none', 4000);
+            setTimeout(() => authError.style.display = 'none', 5000);
         }
 
         async function handleLogin() {
-            const email = document.getElementById('auth-email').value;
+            const email = document.getElementById('auth-email').value.trim();
             const pass = document.getElementById('auth-password').value;
             if (!email || !pass) return showAuthError('الرجاء إدخال البريد وكلمة المرور');
             
@@ -493,15 +481,14 @@
                 await signInWithEmailAndPassword(auth, email, pass);
             } catch (err) {
                 authLoading.style.display = 'none';
-                if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') showAuthError('البريد أو كلمة المرور غير صحيحة');
-                else if (err.code === 'auth/invalid-email') showAuthError('البريد الإلكتروني غير صالح');
-                else showAuthError('خطأ في تسجيل الدخول');
+                showAuthError('خطأ: ' + (err.code === 'auth/invalid-credential' ? 'بيانات الدخول غير صحيحة' : err.message));
             }
         }
 
         async function handleSignup() {
-            const email = document.getElementById('auth-email').value;
+            const email = document.getElementById('auth-email').value.trim();
             const pass = document.getElementById('auth-password').value;
+            
             if (!email || !pass) return showAuthError('الرجاء إدخال البريد وكلمة المرور');
             if (pass.length < 6) return showAuthError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
 
@@ -511,8 +498,9 @@
                 showToast('تم إنشاء الحساب بنجاح!', 'success');
             } catch (err) {
                 authLoading.style.display = 'none';
-                if (err.code === 'auth/email-already-in-use') showAuthError('هذا البريد مسجل مسبقاً');
-                else showAuthError('فشل إنشاء الحساب');
+                if (err.code === 'auth/email-already-in-use') showAuthError('هذا البريد مسجل مسبقاً، جرب تسجيل الدخول');
+                else if (err.code === 'auth/invalid-email') showAuthError('البريد الإلكتروني غير صالح');
+                else showAuthError('خطأ: ' + err.message);
             }
         }
 
@@ -539,12 +527,10 @@
             items: [], sales: [], purch: [], vouchers: [], transfers: [], journal: []
         };
 
-        let unsubs = []; // To stop listeners on logout
+        let unsubs = [];
 
         function startListeners(uid) {
-            // Clear old listeners
             unsubs.forEach(u => u()); unsubs = [];
-
             const collections = ['items', 'sales', 'purch', 'vouchers', 'transfers', 'journal'];
             
             collections.forEach(col => {
@@ -553,10 +539,8 @@
                     DB[col] = [];
                     snapshot.forEach(doc => DB[col].push(doc.data()));
                     
-                    // Sort descending by id (timestamp)
                     if (col !== 'items') DB[col].sort((a, b) => b.id - a.id);
 
-                    // Extract max counters based on data
                     if (col === 'sales' && DB[col].length > 0) DB.counters.sales = Math.max(...DB[col].map(x => parseInt((x.invNo||'S-1000').split('-')[1]) || 1000));
                     if (col === 'purch' && DB[col].length > 0) DB.counters.purch = Math.max(...DB[col].map(x => parseInt((x.invNo||'P-1000').split('-')[1]) || 1000));
                     if (col === 'vouchers' && DB[col].length > 0) DB.counters.voucher = Math.max(...DB[col].map(x => parseInt((x.vouchNo||'V-1000').split('-')[1]) || 1000));
@@ -571,16 +555,12 @@
 
         async function saveToCloud(colName, id, data) {
             if (!currentUser) return;
-            try {
-                await setDoc(doc(db, "users", currentUser.uid, colName, String(id)), data);
-            } catch (e) {
-                console.error(e);
-                showToast('فشل الحفظ في السحابة', 'error');
-            }
+            try { await setDoc(doc(db, "users", currentUser.uid, colName, String(id)), data); }
+            catch (e) { console.error(e); showToast('فشل الحفظ في السحابة', 'error'); }
         }
 
         // ============================================================
-        // 5. App Logic (Same as before, but using saveToCloud)
+        // 5. App Logic
         // ============================================================
         function toggleDrawer() { document.getElementById('drawerOverlay').classList.toggle('active'); }
         function toggleAccordion(id) { const el = document.getElementById(id); const a = document.getElementById('arrow-' + id); const open = el.classList.toggle('open'); a.innerText = open ? '∧' : '∨'; }
@@ -637,7 +617,6 @@
                 qty: parseInt(document.getElementById('item-qty').value)
             };
             if (DB.items.some(x => x.code === item.code)) return showToast('الباركود مستخدم مسبقاً', 'error');
-            
             await saveToCloud('items', item.code, item);
             e.target.reset();
             showToast('تم حفظ الصنف في السحابة', 'success');
@@ -656,7 +635,6 @@
             if (curr === 'YER') amtOriginal = amtUSD * DB.rates.YER;
             if (curr === 'SAR') amtOriginal = amtUSD * DB.rates.SAR;
 
-            // تحديث الكمية في الصنف (في السحابة)
             const updatedItem = { ...item, qty: item.qty - q };
             await saveToCloud('items', updatedItem.code, updatedItem);
 
@@ -669,7 +647,6 @@
                 display: amtOriginal.toFixed(2) + ' ' + curr,
                 payType: document.getElementById('sales-pay-type').value
             };
-
             await saveToCloud('sales', inv.id, inv);
             e.target.reset(); closeModal('modal-sales'); openModal('modal-sales-list');
             showToast('تم حفظ الفاتورة سحابياً', 'success');
@@ -700,7 +677,6 @@
                 display: amtOriginal.toFixed(2) + ' ' + curr,
                 payType: document.getElementById('purch-pay-type').value
             };
-
             await saveToCloud('purch', inv.id, inv);
             e.target.reset(); closeModal('modal-purchases'); openModal('modal-purchases-list');
             showToast('تم حفظ الفاتورة سحابياً', 'success');
@@ -788,9 +764,7 @@
             const localPurch = loadSafe('alm_purch', []);
             const localVouchers = loadSafe('alm_vouchers', []);
 
-            if (localItems.length === 0 && localSales.length === 0) {
-                return showToast('لا توجد بيانات محلية لرفعها', 'info');
-            }
+            if (localItems.length === 0 && localSales.length === 0) return showToast('لا توجد بيانات محلية لرفعها', 'info');
 
             showToast('جاري رفع البيانات...', 'info');
             let count = 0;
@@ -802,7 +776,7 @@
                 for (const v of localVouchers) { await saveToCloud('vouchers', v.id, v); count++; }
                 
                 showToast(`تم رفع ${count} سجل بنجاح!`, 'success');
-                setTimeout(() => location.reload(), 1500); // Reload to sync
+                setTimeout(() => location.reload(), 1500);
             } catch (e) {
                 showToast('حدث خطأ أثناء الرفع', 'error');
             }
@@ -865,7 +839,7 @@
                     <div><div style="font-weight:bold; font-size:13px;">${escapeHtml(it.no)} - ${labels[it.kind]}</div>
                     <div style="font-size:11px; color:#64748b;">${escapeHtml(it.party)}</div></div>
                     <div style="text-align:left;"><div style="font-weight:bold; color:${it.color};">${escapeHtml(it.display)}</div>
-                    <button onclick="window.app.print('${it.kind}', ${it.id})" style="font-size:11px; margin-top:4px; border:1px solid #ccc; padding:2px 6px; border-radius:4px;">🖨️</button></div>
+                    <button onclick="window.app.print('${it.kind.toLowerCase()}', ${it.id})" style="font-size:11px; margin-top:4px; border:1px solid #ccc; padding:2px 6px; border-radius:4px;">🖨️</button></div>
                 </div>
             `).join('');
         }
@@ -932,7 +906,7 @@
             }
         });
 
-        // Expose functions to window for inline HTML event handlers
+        // Expose functions for inline HTML
         window.app = { print: (type, id) => {
             let d;
             if (type === 'sales') d = DB.sales.find(x => x.id === id);
@@ -943,7 +917,6 @@
             if (d) printDocument(type, d);
         }};
 
-        // Ensure inline onclick functions work (since script is module type)
         window.handleLogin = handleLogin;
         window.handleSignup = handleSignup;
         window.handleLogout = handleLogout;

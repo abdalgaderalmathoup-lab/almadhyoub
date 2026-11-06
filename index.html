@@ -379,7 +379,7 @@
                     </div>
                     <input type="file" id="restoreFileInput" style="display:none" onchange="restoreDatabase(event)" accept=".json">
                     <div class="drawer-item" onclick="openModal('modal-transactions')">
-                        <div class="drawer-item-title"><span class="drawer-icon">📑</span><span>سجل العمليات</span></div>
+                        <div class="drawer-item-title"><span class="drawer-icon">📑</span><span>سجل العمليات (الكل)</span></div>
                     </div>
                     <div class="drawer-item" onclick="openModal('modal-accounts')">
                         <div class="drawer-item-title"><span class="drawer-icon">📊</span><span>دليل الحسابات</span></div>
@@ -418,11 +418,11 @@
                     </div>
                 </div>
                 <div class="grid-btn-wrapper">
-                    <div class="grid-btn" onclick="openModal('modal-sales')">
+                    <div class="grid-btn" onclick="openModal('modal-sales-list')">
                         <span class="grid-btn-icon">🛒</span>
                         <div class="grid-btn-pill">المبيعات</div>
                     </div>
-                    <div class="plus-shortcut-btn" onclick="openModal('modal-sales')">+</div>
+                    <div class="plus-shortcut-btn" onclick="openModal('modal-sales')" title="إنشاء فاتورة جديدة">+</div>
                 </div>
                 <div class="grid-btn-wrapper">
                     <div class="grid-btn" onclick="openModal('modal-accounts')">
@@ -431,11 +431,11 @@
                     </div>
                 </div>
                 <div class="grid-btn-wrapper">
-                    <div class="grid-btn" onclick="openModal('modal-purchases')">
+                    <div class="grid-btn" onclick="openModal('modal-purchases-list')">
                         <span class="grid-btn-icon">📥</span>
                         <div class="grid-btn-pill">المشتريات</div>
                     </div>
-                    <div class="plus-shortcut-btn" onclick="openModal('modal-purchases')">+</div>
+                    <div class="plus-shortcut-btn" onclick="openModal('modal-purchases')" title="إنشاء فاتورة جديدة">+</div>
                 </div>
             </div>
 
@@ -495,6 +495,30 @@
             <span class="sys-btn">▢</span>
         </div>
 
+        <!-- ============ MODAL: SALES LIST (سجل المبيعات) ============ -->
+        <div class="modal-page" id="modal-sales-list">
+            <div class="modal-header">
+                <span class="modal-title">🛒 سجل فواتير المبيعات</span>
+                <button class="close-modal-btn" onclick="closeModal('modal-sales-list')">إغلاق ✕</button>
+            </div>
+            <button class="btn-action" style="background:#059669; margin-bottom:12px;" onclick="openModal('modal-sales')">➕ إنشاء فاتورة مبيعات جديدة</button>
+            <div class="card" id="sales-list-container" style="max-height:400px; overflow-y:auto; background:#fff;">
+                <div id="sales-list-tbody"></div>
+            </div>
+        </div>
+
+        <!-- ============ MODAL: PURCHASES LIST (سجل المشتريات) ============ -->
+        <div class="modal-page" id="modal-purchases-list">
+            <div class="modal-header">
+                <span class="modal-title">📦 سجل فواتير المشتريات</span>
+                <button class="close-modal-btn" onclick="closeModal('modal-purchases-list')">إغلاق ✕</button>
+            </div>
+            <button class="btn-action" style="background:#d97706; margin-bottom:12px;" onclick="openModal('modal-purchases')">➕ إنشاء فاتورة مشتريات جديدة</button>
+            <div class="card" id="purchases-list-container" style="max-height:400px; overflow-y:auto; background:#fff;">
+                <div id="purchases-list-tbody"></div>
+            </div>
+        </div>
+
         <!-- ============ MODAL: SALES ============ -->
         <div class="modal-page" id="modal-sales">
             <div class="modal-header">
@@ -540,7 +564,7 @@
                             <input type="text" class="form-input" id="sales-amt-display" readonly>
                         </div>
                     </div>
-                    <button type="submit" class="btn-action" style="background:#059669;">💾 حفظ وطباعة الفاتورة</button>
+                    <button type="submit" class="btn-action" style="background:#059669;">💾 حفظ الفاتورة</button>
                 </div>
             </form>
         </div>
@@ -590,7 +614,7 @@
                             <input type="text" class="form-input" id="purch-amt-display" readonly>
                         </div>
                     </div>
-                    <button type="submit" class="btn-action" style="background:#d97706;">💾 حفظ وطباعة الفاتورة</button>
+                    <button type="submit" class="btn-action" style="background:#d97706;">💾 حفظ الفاتورة</button>
                 </div>
             </form>
         </div>
@@ -631,7 +655,7 @@
                         <label class="form-label">البيان</label>
                         <input type="text" class="form-input" id="v-notes" placeholder="ملاحظات السند" required>
                     </div>
-                    <button type="submit" class="btn-action">💾 حفظ وطباعة السند</button>
+                    <button type="submit" class="btn-action">💾 حفظ السند</button>
                 </div>
             </form>
         </div>
@@ -736,7 +760,7 @@
         <!-- ============ MODAL: TRANSACTIONS LOG ============ -->
         <div class="modal-page" id="modal-transactions">
             <div class="modal-header">
-                <span class="modal-title">📑 سجل العمليات</span>
+                <span class="modal-title">📑 سجل العمليات (الكل)</span>
                 <button class="close-modal-btn" onclick="closeModal('modal-transactions')">إغلاق ✕</button>
             </div>
             <div class="card">
@@ -871,6 +895,10 @@
         function openModal(id) {
             document.querySelectorAll('.modal-page').forEach(m => m.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            
+            if (id === 'modal-sales-list') renderSalesList();
+            if (id === 'modal-purchases-list') renderPurchasesList();
+            
             if (id === 'modal-transactions') renderTransactions();
             if (id === 'modal-currencies') {
                 document.getElementById('rate-yer').value = DB.rates.YER;
@@ -1075,10 +1103,10 @@
 
                 DB.sales.unshift(inv);
                 saveData();
-                printDocument('sales', inv);
-
+                
                 e.target.reset();
                 closeModal('modal-sales');
+                openModal('modal-sales-list'); // العودة للسجل بعد الحفظ
                 showToast('تم حفظ الفاتورة ' + inv.invNo, 'success');
             } catch (err) {
                 showToast(err.message, 'error');
@@ -1125,10 +1153,10 @@
 
                 DB.purch.unshift(inv);
                 saveData();
-                printDocument('purch', inv);
-
+                
                 e.target.reset();
                 closeModal('modal-purchases');
+                openModal('modal-purchases-list'); // العودة للسجل بعد الحفظ
                 showToast('تم حفظ الفاتورة ' + inv.invNo, 'success');
             } catch (err) {
                 showToast(err.message, 'error');
@@ -1166,10 +1194,10 @@
 
                 DB.vouchers.unshift(v);
                 saveData();
-                printDocument('voucher', v);
-
+                
                 e.target.reset();
                 closeModal('modal-vouchers');
+                openModal('modal-transactions'); // عرض السجل العام للسندات
                 showToast('تم حفظ السند ' + v.vouchNo, 'success');
             } catch (err) {
                 showToast(err.message, 'error');
@@ -1230,7 +1258,7 @@
         }
 
         /* ============================================================
-           TRANSACTIONS
+           TRANSACTIONS & LISTS
         ============================================================ */
         function renderTransactions() {
             const filter = document.getElementById('tx-filter').value;
@@ -1292,6 +1320,48 @@
             ).join('');
         }
 
+        function renderSalesList() {
+            const container = document.getElementById('sales-list-tbody');
+            if (!DB.sales || DB.sales.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#64748b; padding:20px;">لا توجد فواتير مبيعات مسجلة</p>';
+                return;
+            }
+            container.innerHTML = DB.sales.map(s => `
+                <div style="padding:10px 4px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:bold; font-size:13px;">${escapeHtml(s.invNo)}</div>
+                        <div style="font-size:11px; color:#64748b; margin-top:2px;">${new Date(s.date).toLocaleDateString('ar-EG')} · ${escapeHtml(s.customer)}</div>
+                        <div style="font-size:11px; color:#0f172a; margin-top:2px;">${escapeHtml(s.itemName)} (${s.qty})</div>
+                    </div>
+                    <div style="text-align:left; flex-shrink:0;">
+                        <div style="font-weight:bold; color:#059669; font-size:13px;">${escapeHtml(s.display)}</div>
+                        <button onclick="reprintTx('SALES', ${s.id})" style="font-size:11px; margin-top:4px; padding:3px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; cursor:pointer;">🖨️ طباعة</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPurchasesList() {
+            const container = document.getElementById('purchases-list-tbody');
+            if (!DB.purch || DB.purch.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#64748b; padding:20px;">لا توجد فواتير مشتريات مسجلة</p>';
+                return;
+            }
+            container.innerHTML = DB.purch.map(p => `
+                <div style="padding:10px 4px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:bold; font-size:13px;">${escapeHtml(p.invNo)}</div>
+                        <div style="font-size:11px; color:#64748b; margin-top:2px;">${new Date(p.date).toLocaleDateString('ar-EG')} · ${escapeHtml(p.supplier)}</div>
+                        <div style="font-size:11px; color:#0f172a; margin-top:2px;">${escapeHtml(p.itemName)} (${p.qty})</div>
+                    </div>
+                    <div style="text-align:left; flex-shrink:0;">
+                        <div style="font-weight:bold; color:#d97706; font-size:13px;">${escapeHtml(p.display)}</div>
+                        <button onclick="reprintTx('PURCH', ${p.id})" style="font-size:11px; margin-top:4px; padding:3px 8px; border:1px solid #cbd5e1; background:#fff; border-radius:4px; cursor:pointer;">🖨️ طباعة</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         function reprintTx(kind, id) {
             if (kind === 'SALES') {
                 const d = DB.sales.find(x => x.id === id);
@@ -1306,7 +1376,7 @@
         }
 
         /* ============================================================
-           RENDER
+           RENDER ALL
         ============================================================ */
         function renderAll() {
             document.getElementById('accounts-list-tbody').innerHTML = DB.accs

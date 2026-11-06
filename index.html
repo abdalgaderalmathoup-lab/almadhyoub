@@ -34,12 +34,7 @@
         body { background-color: var(--phone-bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px 5px; }
 
         /* ===== Auth Screen ===== */
-        #auth-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0b5993, #073b64);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 9999; padding: 20px; color: #fff;
-        }
+        #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0b5993, #073b64); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; padding: 20px; color: #fff; }
         .auth-card { background: #fff; width: 100%; max-width: 350px; border-radius: 15px; padding: 25px; color: var(--text-dark); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .auth-logo { font-size: 40px; text-align: center; margin-bottom: 10px; }
         .auth-title { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 20px; color: var(--header-blue); }
@@ -48,7 +43,7 @@
         .auth-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
         .auth-btn-primary { background: var(--header-blue); color: #fff; }
         .auth-btn-secondary { background: transparent; color: var(--header-blue); border: 2px solid var(--header-blue); }
-        .auth-error { color: var(--danger); font-size: 12px; text-align: center; margin-bottom: 10px; display: none; font-weight: bold; background: #fee2e2; padding: 8px; border-radius: 6px; }
+        .auth-error { color: var(--danger); font-size: 13px; text-align: center; margin-bottom: 10px; display: none; font-weight: bold; background: #fee2e2; padding: 8px; border-radius: 6px; }
         .auth-loading { display: none; text-align: center; color: var(--header-blue); font-weight: bold; margin-top: 10px; }
 
         /* ===== App UI ===== */
@@ -165,6 +160,7 @@
             </div>
             <div class="header-icons-area">
                 <span class="header-icon" onclick="showToast('مرحباً بك في النسخة السحابية','info')">☁️</span>
+                <span class="header-icon" onclick="showToast('شارك التطبيق مع زملائك','info')">🔗</span>
             </div>
         </div>
 
@@ -178,6 +174,14 @@
                     <div class="drawer-item" onclick="uploadLocalDataToCloud()">
                         <div class="drawer-item-title"><span class="drawer-icon">☁️</span><span>رفع البيانات القديمة للسحابة</span></div>
                     </div>
+                    <div class="drawer-item" onclick="backupDatabase()">
+                        <div class="drawer-item-title"><span class="drawer-icon">💾</span><span>حفظ نسخة احتياطية (محلي)</span></div>
+                    </div>
+                    <div class="drawer-item" onclick="triggerRestoreInput()">
+                        <div class="drawer-item-title"><span class="drawer-icon">🔄</span><span>استرجاع نسخة (محلي)</span></div>
+                    </div>
+                    <input type="file" id="restoreFileInput" style="display:none" onchange="restoreDatabase(event)" accept=".json">
+                    
                     <div class="drawer-item" onclick="openModal('modal-transactions')">
                         <div class="drawer-item-title"><span class="drawer-icon">📑</span><span>سجل العمليات (الكل)</span></div>
                     </div>
@@ -186,6 +190,15 @@
                     </div>
                     <div class="drawer-item" onclick="openModal('modal-currencies')">
                         <div class="drawer-item-title"><span class="drawer-icon">⚙️</span><span>إعدادات والعملات</span></div>
+                    </div>
+                    <div class="drawer-item" id="installItem" style="display:none;" onclick="installApp()">
+                        <div class="drawer-item-title"><span class="drawer-icon">📲</span><span>تثبيت التطبيق</span></div>
+                    </div>
+                    <div class="drawer-item" onclick="forceUpdate()">
+                        <div class="drawer-item-title"><span class="drawer-icon">🔄</span><span>التحقق من التحديثات</span></div>
+                    </div>
+                    <div class="drawer-item" onclick="clearAllCaches()">
+                        <div class="drawer-item-title"><span class="drawer-icon">🧹</span><span>مسح الكاش (تحديث الواجهة)</span></div>
                     </div>
                     <div class="drawer-item" onclick="handleLogout()">
                         <div class="drawer-item-title"><span class="drawer-icon" style="color:var(--danger)">🚪</span><span style="color:var(--danger)">تسجيل الخروج</span></div>
@@ -223,8 +236,21 @@
             <div class="accordion-section">
                 <div class="accordion-header" onclick="toggleAccordion('acc-inventory')"><span>عمليات مخزنية</span><span class="accordion-arrow" id="arrow-acc-inventory">∨</span></div>
                 <div class="accordion-body" id="acc-inventory"><button class="btn-action" onclick="openModal('modal-items')">🏷️ إدارة كارت الأصناف والجرد</button></div>
+                
+                <div class="accordion-header" onclick="toggleAccordion('acc-journal')"><span>قيود وحسابات</span><span class="accordion-arrow" id="arrow-acc-journal">∨</span></div>
+                <div class="accordion-body" id="acc-journal">
+                    <button class="btn-action" style="margin-bottom:6px;" onclick="openModal('modal-accounts')">📁 دليل الشجرة المحاسبية</button>
+                    <button class="btn-action" style="background:#059669;" onclick="openModal('modal-vouchers')">💵 إنشاء قيود وسندات اليومية</button>
+                </div>
+
+                <div class="accordion-header" onclick="toggleAccordion('acc-items')"><span>أصناف</span><span class="accordion-arrow" id="arrow-acc-items">∨</span></div>
+                <div class="accordion-body" id="acc-items"><button class="btn-action" onclick="openModal('modal-items')">➕ إضافة صنف جديد ومسح الباركود</button></div>
+
+                <div class="accordion-header" onclick="toggleAccordion('acc-currencies')"><span>العملات</span><span class="accordion-arrow" id="arrow-acc-currencies">∨</span></div>
+                <div class="accordion-body" id="acc-currencies"><button class="btn-action" style="background:#d97706;" onclick="openModal('modal-currencies')">💱 أسعار الصرف ($ / ر.ي / ر.س)</button></div>
+
                 <div class="accordion-header" onclick="toggleAccordion('acc-reports')"><span>التقارير</span><span class="accordion-arrow" id="arrow-acc-reports">∨</span></div>
-                <div class="accordion-body" id="acc-reports"><button class="btn-action" style="background:#475569;" onclick="openModal('modal-reports')">📊 كشوفات الأرباح والخسائر</button></div>
+                <div class="accordion-body" id="acc-reports"><button class="btn-action" style="background:#475569;" onclick="openModal('modal-reports')">📊 كشوفات الأرباح والخسائر وحركة الصندوق</button></div>
             </div>
         </div>
 
@@ -513,7 +539,7 @@
         // 4. Data Layer (Firestore)
         // ============================================================
         let DB = {
-            rates: { YER: 530, SAR: 3.75 },
+            rates: loadSafe('alm_rates', { YER: 530, SAR: 3.75 }),
             counters: { sales: 1000, purch: 1000, voucher: 1000, transfer: 1000, journal: 1000 },
             accs: [
                 { code: '101', name: 'الصندوق الرئيسي', type: 'الأصول' },
@@ -571,6 +597,10 @@
             if (id === 'modal-purchases-list') renderPurchasesList();
             if (id === 'modal-transactions') renderTransactions();
             if (id === 'modal-accounts' || id === 'modal-transfer' || id === 'modal-journal-entry') populateAccountSelects();
+            if (id === 'modal-currencies') {
+                document.getElementById('rate-yer').value = DB.rates.YER;
+                document.getElementById('rate-sar').value = DB.rates.SAR;
+            }
         }
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
@@ -582,7 +612,8 @@
         function updateRates() {
             DB.rates.YER = parseFloat(document.getElementById('rate-yer').value) || 530;
             DB.rates.SAR = parseFloat(document.getElementById('rate-sar').value) || 3.75;
-            showToast('تم الحفظ محلياً (الأسعار لا تتزامن حالياً)', 'info');
+            localStorage.setItem('alm_rates', JSON.stringify(DB.rates));
+            showToast('تم الحفظ محلياً', 'success');
         }
 
         function calcSales() {
@@ -754,15 +785,50 @@
         }
 
         // ============================================================
-        // 6. Migration (Local to Cloud)
+        // 6. Backup & Restore (Local)
         // ============================================================
+        function backupDatabase() {
+            const backup = {
+                app: 'AlMadhyoub Accounting', version: '5.2.0', timestamp: new Date().toISOString(),
+                rates: DB.rates, items: DB.items, sales: DB.sales, purch: DB.purch, vouchers: DB.vouchers, transfers: DB.transfers, journal: DB.journal
+            };
+            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backup, null, 2));
+            const a = document.createElement('a');
+            a.setAttribute('href', dataStr);
+            a.setAttribute('download', 'AlMadhyoub_Backup_' + Date.now() + '.json');
+            document.body.appendChild(a); a.click(); a.remove();
+            showToast('تم تصدير النسخة الاحتياطية', 'success');
+        }
+
+        function triggerRestoreInput() { document.getElementById('restoreFileInput').click(); }
+
+        function restoreDatabase(event) {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported.items)) DB.items = imported.items;
+                    if (Array.isArray(imported.sales)) DB.sales = imported.sales;
+                    if (Array.isArray(imported.purch)) DB.purch = imported.purch;
+                    if (Array.isArray(imported.vouchers)) DB.vouchers = imported.vouchers;
+                    if (Array.isArray(imported.transfers)) DB.transfers = imported.transfers;
+                    if (Array.isArray(imported.journal)) DB.journal = imported.journal;
+                    if (imported.rates) DB.rates = imported.rates;
+                    
+                    renderAll();
+                    showToast('تم استرجاع البيانات للعرض المحلي فقط. يرجى رفعها للسحابة', 'success');
+                } catch (err) { showToast('ملف غير صالح', 'error'); }
+            };
+            reader.readAsText(file); event.target.value = '';
+        }
+
         async function uploadLocalDataToCloud() {
             if (!confirm('سيتم رفع البيانات المحفوظة في هذا الهاتف إلى حسابك السحابي. هل تريد المتابعة؟')) return;
             
             const localItems = loadSafe('alm_items', []);
             const localSales = loadSafe('alm_sales', []);
             const localPurch = loadSafe('alm_purch', []);
-            const localVouchers = loadSafe('alm_vouchers', []);
 
             if (localItems.length === 0 && localSales.length === 0) return showToast('لا توجد بيانات محلية لرفعها', 'info');
 
@@ -773,10 +839,8 @@
                 for (const item of localItems) { await saveToCloud('items', item.code, item); count++; }
                 for (const s of localSales) { await saveToCloud('sales', s.id, s); count++; }
                 for (const p of localPurch) { await saveToCloud('purch', p.id, p); count++; }
-                for (const v of localVouchers) { await saveToCloud('vouchers', v.id, v); count++; }
                 
                 showToast(`تم رفع ${count} سجل بنجاح!`, 'success');
-                setTimeout(() => location.reload(), 1500);
             } catch (e) {
                 showToast('حدث خطأ أثناء الرفع', 'error');
             }
@@ -884,10 +948,45 @@
             document.getElementById('rep-cogs').innerText = '$' + fmt(cogs);
             document.getElementById('rep-gp').innerText = '$' + fmt(totalSales - cogs);
             document.getElementById('rep-cash').innerText = '$' + fmt(cashIn - cashOut);
+
+            const ry = document.getElementById('rate-yer');
+            const rs = document.getElementById('rate-sar');
+            if (ry) ry.value = DB.rates.YER;
+            if (rs) rs.value = DB.rates.SAR;
         }
 
         // ============================================================
-        // 8. Auth State Listener
+        // 8. PWA & Cache
+        // ============================================================
+        async function clearAllCaches() {
+            if (!confirm('⚠️ سيتم مسح الكاش وإعادة تحميل التطبيق.\n\nبياناتك محفوظة سحابياً.\n\nهل تريد المتابعة؟')) return;
+            try {
+                const keys = await caches.keys();
+                await Promise.all(keys.map(k => caches.delete(k)));
+                if ('serviceWorker' in navigator) {
+                    const reg = await navigator.serviceWorker.getRegistration();
+                    if (reg) await reg.unregister();
+                }
+                showToast('تم المسح — جاري إعادة التحميل', 'success');
+                setTimeout(() => location.reload(), 800);
+            } catch (e) { showToast('فشل مسح الكاش', 'error'); }
+        }
+
+        async function forceUpdate() {
+            if (!('serviceWorker' in navigator)) return;
+            const reg = await navigator.serviceWorker.getRegistration();
+            if (!reg) return;
+            showToast('جاري التحقق...', 'info');
+            await reg.update();
+            setTimeout(() => showToast('✅ التطبيق محدث', 'success'), 1500);
+        }
+
+        function installApp() {
+            showToast('للتثبيت: اضغط على قائمة المتصفح ⋮ واختر "تثبيت التطبيق"', 'info');
+        }
+
+        // ============================================================
+        // 9. Auth State Listener
         // ============================================================
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -937,6 +1036,12 @@
         window.renderPurchasesList = renderPurchasesList;
         window.uploadLocalDataToCloud = uploadLocalDataToCloud;
         window.updateRates = updateRates;
+        window.backupDatabase = backupDatabase;
+        window.triggerRestoreInput = triggerRestoreInput;
+        window.restoreDatabase = restoreDatabase;
+        window.clearAllCaches = clearAllCaches;
+        window.forceUpdate = forceUpdate;
+        window.installApp = installApp;
     </script>
 </body>
 </html>

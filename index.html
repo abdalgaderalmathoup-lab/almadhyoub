@@ -712,12 +712,108 @@
                 <span class="modal-title">📁 دليل الحسابات</span>
                 <button class="close-modal-btn" onclick="closeModal('modal-accounts')">إغلاق ✕</button>
             </div>
+            
+            <!-- أزرار العمليات الجديدة -->
+            <div class="card" style="padding:10px;">
+                <button class="btn-action" style="background:#0891b2; margin-bottom:8px;" onclick="openModal('modal-transfer')">🔄 تحويل من حساب إلى حساب</button>
+                <button class="btn-action" style="background:#059669;" onclick="openModal('modal-journal-entry')">📝 إيداع / سحب (صندوق / عميل / مورد)</button>
+            </div>
+
             <div class="card" style="overflow-x:auto;">
                 <table class="data-table">
                     <thead><tr><th>الكود</th><th>الحساب</th><th>التصنيف</th></tr></thead>
                     <tbody id="accounts-list-tbody"></tbody>
                 </table>
             </div>
+        </div>
+
+        <!-- ============ MODAL: TRANSFER (تحويل بين الحسابات) ============ -->
+        <div class="modal-page" id="modal-transfer">
+            <div class="modal-header">
+                <span class="modal-title">🔄 تحويل بين الحسابات</span>
+                <button class="close-modal-btn" onclick="closeModal('modal-transfer')">إغلاق ✕</button>
+            </div>
+            <form onsubmit="handleTransferSubmit(event)">
+                <div class="card">
+                    <div class="form-group">
+                        <label class="form-label">من حساب (مدين)</label>
+                        <select class="form-select" id="tr-from" required>
+                            <!-- سيتم تعبئتها برمجياً -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">إلى حساب (دائن)</label>
+                        <select class="form-select" id="tr-to" required>
+                            <!-- سيتم تعبئتها برمجياً -->
+                        </select>
+                    </div>
+                    <div class="row-2">
+                        <div class="form-group">
+                            <label class="form-label">المبلغ</label>
+                            <input type="number" step="0.01" min="0.01" class="form-input" id="tr-amt" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">العملة</label>
+                            <select class="form-select" id="tr-curr">
+                                <option value="USD">دولار ($)</option>
+                                <option value="YER">ريال يمني (ر.ي)</option>
+                                <option value="SAR">ريال سعودي (ر.س)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">البيان / ملاحظات</label>
+                        <input type="text" class="form-input" id="tr-notes" placeholder="سبب التحويل..." required>
+                    </div>
+                    <button type="submit" class="btn-action" style="background:#0891b2;">💾 حفظ التحويل</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ============ MODAL: JOURNAL ENTRY (إيداع/سحب) ============ -->
+        <div class="modal-page" id="modal-journal-entry">
+            <div class="modal-header">
+                <span class="modal-title">📝 إيداع / سحب</span>
+                <button class="close-modal-btn" onclick="closeModal('modal-journal-entry')">إغلاق ✕</button>
+            </div>
+            <form onsubmit="handleJournalSubmit(event)">
+                <div class="card">
+                    <div class="form-group">
+                        <label class="form-label">الحساب (عميل / مورد / صندوق)</label>
+                        <select class="form-select" id="je-acc" required>
+                            <!-- سيتم تعبئتها برمجياً -->
+                        </select>
+                    </div>
+                    <div class="row-2">
+                        <div class="form-group">
+                            <label class="form-label">نوع العملية</label>
+                            <select class="form-select" id="je-type">
+                                <option value="DEPOSIT">إيداع (+)</option>
+                                <option value="WITHDRAW">سحب (-)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">المبلغ</label>
+                            <input type="number" step="0.01" min="0.01" class="form-input" id="je-amt" required>
+                        </div>
+                    </div>
+                    <div class="row-2">
+                        <div class="form-group">
+                            <label class="form-label">العملة</label>
+                            <select class="form-select" id="je-curr">
+                                <option value="USD">دولار ($)</option>
+                                <option value="YER">ريال يمني (ر.ي)</option>
+                                <option value="SAR">ريال سعودي (ر.س)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">البيان</label>
+                        <input type="text" class="form-input" id="je-notes" required>
+                    </div>
+                    <button type="submit" class="btn-action" style="background:#059669;">💾 حفظ العملية</button>
+                </div>
+            </form>
         </div>
 
         <!-- ============ MODAL: CURRENCIES ============ -->
@@ -772,6 +868,8 @@
                             <option value="SALES">مبيعات</option>
                             <option value="PURCH">مشتريات</option>
                             <option value="VOUCHER">سندات</option>
+                            <option value="TRANSFER">تحويلات</option>
+                            <option value="JOURNAL">قيود (إيداع/سحب)</option>
                         </select>
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
@@ -844,7 +942,7 @@
         ============================================================ */
         const DB = {
             rates: loadSafe('alm_rates', { YER: 530, SAR: 3.75 }),
-            counters: loadSafe('alm_counters', { sales: 1000, purch: 1000, voucher: 1000 }),
+            counters: loadSafe('alm_counters', { sales: 1000, purch: 1000, voucher: 1000, transfer: 1000, journal: 1000 }),
             accs: [
                 { code: '101', name: 'الصندوق الرئيسي', type: 'الأصول' },
                 { code: '102', name: 'العملاء والمدينون', type: 'الأصول' },
@@ -859,8 +957,14 @@
             ]),
             sales: loadSafe('alm_sales', []),
             purch: loadSafe('alm_purch', []),
-            vouchers: loadSafe('alm_vouchers', [])
+            vouchers: loadSafe('alm_vouchers', []),
+            transfers: loadSafe('alm_transfers', []),
+            journal: loadSafe('alm_journal', [])
         };
+
+        // تأكد من وجود العدادات الجديدة
+        if (!DB.counters.transfer) DB.counters.transfer = 1000;
+        if (!DB.counters.journal) DB.counters.journal = 1000;
 
         DB.items.forEach(it => {
             if (typeof it.costUSD !== 'number' || !isFinite(it.costUSD)) {
@@ -873,6 +977,8 @@
             saveSafe('alm_sales', DB.sales);
             saveSafe('alm_purch', DB.purch);
             saveSafe('alm_vouchers', DB.vouchers);
+            saveSafe('alm_transfers', DB.transfers);
+            saveSafe('alm_journal', DB.journal);
             saveSafe('alm_rates', DB.rates);
             saveSafe('alm_counters', DB.counters);
             renderAll();
@@ -898,11 +1004,16 @@
             
             if (id === 'modal-sales-list') renderSalesList();
             if (id === 'modal-purchases-list') renderPurchasesList();
-            
             if (id === 'modal-transactions') renderTransactions();
+            
             if (id === 'modal-currencies') {
                 document.getElementById('rate-yer').value = DB.rates.YER;
                 document.getElementById('rate-sar').value = DB.rates.SAR;
+            }
+
+            // تحديث قوائم الحسابات عند فتح التحويل أو القيد
+            if (id === 'modal-transfer' || id === 'modal-journal-entry' || id === 'modal-accounts') {
+                populateAccountSelects();
             }
         }
 
@@ -945,14 +1056,16 @@
         function backupDatabase() {
             const backup = {
                 app: 'AlMadhyoub Accounting',
-                version: '5.0.0',
+                version: '5.1.0',
                 timestamp: new Date().toISOString(),
                 rates: DB.rates,
                 counters: DB.counters,
                 items: DB.items,
                 sales: DB.sales,
                 purch: DB.purch,
-                vouchers: DB.vouchers
+                vouchers: DB.vouchers,
+                transfers: DB.transfers,
+                journal: DB.journal
             };
             try {
                 const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backup, null, 2));
@@ -984,6 +1097,8 @@
                     if (Array.isArray(imported.sales)) DB.sales = imported.sales;
                     if (Array.isArray(imported.purch)) DB.purch = imported.purch;
                     if (Array.isArray(imported.vouchers)) DB.vouchers = imported.vouchers;
+                    if (Array.isArray(imported.transfers)) DB.transfers = imported.transfers;
+                    if (Array.isArray(imported.journal)) DB.journal = imported.journal;
                     if (imported.rates && typeof imported.rates === 'object') DB.rates = imported.rates;
                     if (imported.counters && typeof imported.counters === 'object') DB.counters = imported.counters;
                     DB.items.forEach(it => {
@@ -1106,7 +1221,7 @@
                 
                 e.target.reset();
                 closeModal('modal-sales');
-                openModal('modal-sales-list'); // العودة للسجل بعد الحفظ
+                openModal('modal-sales-list');
                 showToast('تم حفظ الفاتورة ' + inv.invNo, 'success');
             } catch (err) {
                 showToast(err.message, 'error');
@@ -1156,7 +1271,7 @@
                 
                 e.target.reset();
                 closeModal('modal-purchases');
-                openModal('modal-purchases-list'); // العودة للسجل بعد الحفظ
+                openModal('modal-purchases-list');
                 showToast('تم حفظ الفاتورة ' + inv.invNo, 'success');
             } catch (err) {
                 showToast(err.message, 'error');
@@ -1197,8 +1312,99 @@
                 
                 e.target.reset();
                 closeModal('modal-vouchers');
-                openModal('modal-transactions'); // عرض السجل العام للسندات
+                openModal('modal-transactions');
                 showToast('تم حفظ السند ' + v.vouchNo, 'success');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function handleTransferSubmit(e) {
+            e.preventDefault();
+            try {
+                const from = document.getElementById('tr-from').value;
+                const to = document.getElementById('tr-to').value;
+                const amtVal = parseFloat(document.getElementById('tr-amt').value);
+                const curr = document.getElementById('tr-curr').value;
+                const notes = document.getElementById('tr-notes').value.trim();
+
+                if (from === to) throw new Error('لا يمكن التحويل لنفس الحساب');
+                if (!isFinite(amtVal) || amtVal <= 0) throw new Error('أدخل مبلغاً صحيحاً');
+                if (!notes) throw new Error('البيان مطلوب');
+
+                let amtUSD = amtVal;
+                if (curr === 'YER') amtUSD = amtVal / DB.rates.YER;
+                if (curr === 'SAR') amtUSD = amtVal / DB.rates.SAR;
+
+                DB.counters.transfer += 1;
+                const fromAcc = DB.accs.find(a => a.code === from);
+                const toAcc = DB.accs.find(a => a.code === to);
+
+                const tr = {
+                    id: Date.now(),
+                    trNo: 'T-' + DB.counters.transfer,
+                    date: new Date().toISOString(),
+                    fromCode: from,
+                    fromName: fromAcc ? fromAcc.name : from,
+                    toCode: to,
+                    toName: toAcc ? toAcc.name : to,
+                    amtUSD: amtUSD,
+                    curr: curr,
+                    display: amtVal.toFixed(2) + ' ' + curr,
+                    notes: notes
+                };
+
+                DB.transfers.unshift(tr);
+                saveData();
+                
+                e.target.reset();
+                closeModal('modal-transfer');
+                openModal('modal-transactions');
+                showToast('تم حفظ التحويل ' + tr.trNo, 'success');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function handleJournalSubmit(e) {
+            e.preventDefault();
+            try {
+                const accCode = document.getElementById('je-acc').value;
+                const type = document.getElementById('je-type').value;
+                const amtVal = parseFloat(document.getElementById('je-amt').value);
+                const curr = document.getElementById('je-curr').value;
+                const notes = document.getElementById('je-notes').value.trim();
+
+                if (!isFinite(amtVal) || amtVal <= 0) throw new Error('أدخل مبلغاً صحيحاً');
+                if (!notes) throw new Error('البيان مطلوب');
+
+                let amtUSD = amtVal;
+                if (curr === 'YER') amtUSD = amtVal / DB.rates.YER;
+                if (curr === 'SAR') amtUSD = amtVal / DB.rates.SAR;
+
+                DB.counters.journal += 1;
+                const acc = DB.accs.find(a => a.code === accCode);
+
+                const je = {
+                    id: Date.now(),
+                    jeNo: 'J-' + DB.counters.journal,
+                    date: new Date().toISOString(),
+                    accCode: accCode,
+                    accName: acc ? acc.name : accCode,
+                    type: type,
+                    amtUSD: amtUSD,
+                    curr: curr,
+                    display: amtVal.toFixed(2) + ' ' + curr,
+                    notes: notes
+                };
+
+                DB.journal.unshift(je);
+                saveData();
+                
+                e.target.reset();
+                closeModal('modal-journal-entry');
+                openModal('modal-transactions');
+                showToast('تم حفظ القيد ' + je.jeNo, 'success');
             } catch (err) {
                 showToast(err.message, 'error');
             }
@@ -1246,6 +1452,26 @@
                         '<tr><td>البيان:</td><td>' + escapeHtml(data.notes) + '</td></tr>' +
                     '</table>' +
                     '<div class="print-total">المبلغ: ' + escapeHtml(data.display) + '</div>';
+            } else if (type === 'transfer') {
+                body = header +
+                    '<table class="print-meta">' +
+                        '<tr><td>رقم التحويل:</td><td><strong>' + escapeHtml(data.trNo) + '</strong></td></tr>' +
+                        '<tr><td>التاريخ:</td><td>' + escapeHtml(dateStr) + '</td></tr>' +
+                        '<tr><td>من حساب:</td><td>' + escapeHtml(data.fromName) + '</td></tr>' +
+                        '<tr><td>إلى حساب:</td><td>' + escapeHtml(data.toName) + '</td></tr>' +
+                        '<tr><td>البيان:</td><td>' + escapeHtml(data.notes) + '</td></tr>' +
+                    '</table>' +
+                    '<div class="print-total">المبلغ: ' + escapeHtml(data.display) + '</div>';
+            } else if (type === 'journal') {
+                body = header +
+                    '<table class="print-meta">' +
+                        '<tr><td>رقم القيد:</td><td><strong>' + escapeHtml(data.jeNo) + '</strong></td></tr>' +
+                        '<tr><td>التاريخ:</td><td>' + escapeHtml(dateStr) + '</td></tr>' +
+                        '<tr><td>الحساب:</td><td>' + escapeHtml(data.accName) + '</td></tr>' +
+                        '<tr><td>النوع:</td><td>' + (data.type === 'DEPOSIT' ? 'إيداع' : 'سحب') + '</td></tr>' +
+                        '<tr><td>البيان:</td><td>' + escapeHtml(data.notes) + '</td></tr>' +
+                    '</table>' +
+                    '<div class="print-total">المبلغ: ' + escapeHtml(data.display) + '</div>';
             }
 
             const footer = '<div class="print-footer">' +
@@ -1286,6 +1512,20 @@
                     color: v.type === 'RECEIPT' ? '#0891b2' : '#dc2626'
                 }));
             }
+            if (filter === 'ALL' || filter === 'TRANSFER') {
+                DB.transfers.forEach(t => all.push({
+                    kind: 'TRANSFER', id: t.id, no: t.trNo, date: t.date,
+                    party: t.fromName + ' ← ' + t.toName, extra: t.notes, display: t.display,
+                    color: '#4f46e5'
+                }));
+            }
+            if (filter === 'ALL' || filter === 'JOURNAL') {
+                DB.journal.forEach(j => all.push({
+                    kind: 'JOURNAL', id: j.id, no: j.jeNo, date: j.date,
+                    party: j.accName, extra: j.notes, display: j.display,
+                    color: j.type === 'DEPOSIT' ? '#059669' : '#dc2626'
+                }));
+            }
 
             let result = all.sort((a, b) => b.id - a.id);
             if (search) {
@@ -1302,7 +1542,7 @@
                 return;
             }
 
-            const labels = { SALES: 'مبيعات', PURCH: 'مشتريات', VOUCHER: 'سند' };
+            const labels = { SALES: 'مبيعات', PURCH: 'مشتريات', VOUCHER: 'سند', TRANSFER: 'تحويل', JOURNAL: 'قيد' };
             container.innerHTML = result.map(it =>
                 '<div style="padding:10px 4px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; gap:8px;">' +
                     '<div style="flex:1; min-width:0;">' +
@@ -1369,10 +1609,30 @@
             } else if (kind === 'PURCH') {
                 const d = DB.purch.find(x => x.id === id);
                 if (d) printDocument('purch', d);
+            } else if (kind === 'TRANSFER') {
+                const d = DB.transfers.find(x => x.id === id);
+                if (d) printDocument('transfer', d);
+            } else if (kind === 'JOURNAL') {
+                const d = DB.journal.find(x => x.id === id);
+                if (d) printDocument('journal', d);
             } else {
                 const d = DB.vouchers.find(x => x.id === id);
                 if (d) printDocument('voucher', d);
             }
+        }
+
+        /* ============================================================
+           POPULATE ACCOUNT DROPDOWNS
+        ============================================================ */
+        function populateAccountSelects() {
+            const opts = DB.accs.map(a => `<option value="${a.code}">${a.name} (${a.code})</option>`).join('');
+            const trFrom = document.getElementById('tr-from');
+            const trTo = document.getElementById('tr-to');
+            const jeAcc = document.getElementById('je-acc');
+            
+            if (trFrom) trFrom.innerHTML = opts;
+            if (trTo) trTo.innerHTML = opts;
+            if (jeAcc) jeAcc.innerHTML = opts;
         }
 
         /* ============================================================
@@ -1399,6 +1659,9 @@
             document.getElementById('purch-item-select').innerHTML = opts;
             calcSales();
             calcPurch();
+
+            // تعبئة قوائم الحسابات
+            populateAccountSelects();
 
             const totalSales = DB.sales.reduce((s, x) => s + (x.amtUSD || 0), 0);
             const totalPurch = DB.purch.reduce((s, x) => s + (x.amtUSD || 0), 0);

@@ -1040,7 +1040,6 @@
             document.getElementById('accounts-list-tbody').innerHTML = DB.accs.map(a => `<tr><td>${a.code}</td><td>${a.name}</td><td>${a.type}</td></tr>`).join('');
             document.getElementById('items-list-tbody').innerHTML = DB.items.map(i => `<tr><td>${escapeHtml(i.code)}</td><td>${escapeHtml(i.name)}</td><td>${i.qty}</td><td>$${fmt(i.priceUSD)}</td></tr>`).join('');
             
-            // Datalists للعملاء والموردين
             document.getElementById('customers-list').innerHTML = DB.customers.map(c => `<option value="${escapeHtml(c.name)}">`).join('');
             document.getElementById('suppliers-list').innerHTML = DB.suppliers.map(s => `<option value="${escapeHtml(s.name)}">`).join('');
 
@@ -1066,7 +1065,6 @@
             if (ry) ry.value = DB.rates.YER;
             if (rs) rs.value = DB.rates.SAR;
 
-            // تحديث القوائم إذا كانت مفتوحة
             if (document.getElementById('modal-customers').classList.contains('active')) renderCustomersList();
             if (document.getElementById('modal-suppliers').classList.contains('active')) renderSuppliersList();
         }

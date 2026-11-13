@@ -1,62 +1,58 @@
-const CACHE_VERSION = 'mahasib-v7.0-offline';
-const APP_SHELL = [
+const CACHE_NAME = 'mahasib-cache-v8'; // تم تغيير الإصدار لإجبار التحديث
+const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icon.svg',
-  // المكتبات الخارجية التي يحتاجها التطبيق
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js',
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js'
 ];
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_VERSION)
-      .then(cache => {
-        return cache.addAll(APP_SHELL);
-      })
-      .then(() => self.skipWaiting())
+// تثبيت الكاش وحفظ الملفات
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(ASSETS);
+    }).then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
+// تنظيف الكاش القديم
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
     caches.keys().then(keys => Promise.all(
-      keys.filter(k => k !== CACHE_VERSION).map(k => caches.delete(k))
+      keys.map(key => { if (key !== CACHE_NAME) return caches.delete(key); })
     )).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
+// جلب الملفات
+self.addEventListener('fetch', (e) => {
+  if (e.request.method !== 'GET') return;
   
-  if (req.method !== 'GET') return;
+  // إذا كان الطلب لفتح التطبيق (صفحة HTML)، جرب الإنترنت أولاً ثم الكاش
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).catch(() => {
+        return caches.match('./index.html');
+      })
+    );
+    return;
+  }
 
-  event.respondWith(
-    caches.match(req).then(cached => {
-      if (cached) {
-        // تحديث الملف في الخلفية إذا كان هناك إنترنت
-        fetch(req).then(res => {
-          if (res && res.ok) {
-            caches.open(CACHE_VERSION).then(c => c.put(req, res));
-          }
-        }).catch(() => {});
-        return cached;
-      }
-      
-      return fetch(req).then(res => {
-        if (res && res.ok) {
-          const clone = res.clone();
-          caches.open(CACHE_VERSION).then(c => c.put(req, clone));
-        }
-        return res;
+  // لبقية الملفات (مكتبات، أيقونات)، استخدم الكاش أولاً
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      return cached || fetch(e.request).then(res => {
+         if(res && res.status === 200) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+         }
+         return res;
       }).catch(() => {
-        // إذا انقطع الإنترنت وفشل التحميل، أعد تحميل ملف التطبيق الأساسي
-        if (req.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
+         // إذا فشل تحميل أي شيء وفقد الاتصال
       });
     })
   );

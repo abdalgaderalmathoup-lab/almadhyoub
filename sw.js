@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mahasib-cache-v8'; // تم تغيير الإصدار لإجبار التحديث
+const CACHE_NAME = 'mahasib-offline-v10';
 const ASSETS = [
   './',
   './index.html',
@@ -10,16 +10,19 @@ const ASSETS = [
   'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js'
 ];
 
-// تثبيت الكاش وحفظ الملفات
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS);
+      // حفظ الملفات واحداً تلو الآخر حتى لا يفشل الكاش بالكامل إذا تأخر ملف
+      return Promise.all(
+        ASSETS.map(url => {
+          return cache.add(url).catch(err => console.log('Failed to cache:', url));
+        })
+      );
     }).then(() => self.skipWaiting())
   );
 });
 
-// تنظيف الكاش القديم
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then(keys => Promise.all(
@@ -28,31 +31,30 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// جلب الملفات
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
   
-  // إذا كان الطلب لفتح التطبيق (صفحة HTML)، جرب الإنترنت أولاً ثم الكاش
-  if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request).catch(() => {
-        return caches.match('./index.html');
-      })
-    );
-    return;
-  }
-
-  // لبقية الملفات (مكتبات، أيقونات)، استخدم الكاش أولاً
+  // استراتيجية: الكاش أولاً، ثم الإنترنت
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      return cached || fetch(e.request).then(res => {
-         if(res && res.status === 200) {
-            const clone = res.clone();
-            caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-         }
-         return res;
+    caches.match(e.request).then(cachedResponse => {
+      if (cachedResponse) {
+        return cachedResponse; // إرجاع الملف المحفوظ فوراً
+      }
+      
+      return fetch(e.request).then(response => {
+        // إذا كان الملف الجديد صالحاً، احفظه
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(e.request, responseToCache);
+          });
+        }
+        return response;
       }).catch(() => {
-         // إذا فشل تحميل أي شيء وفقد الاتصال
+        // إذا فشل الإنترنت وكان المطلوب صفحة، أرجع واجهة التطبيق
+        if (e.request.mode === 'navigate') {
+          return caches.match('./index.html');
+        }
       });
     })
   );

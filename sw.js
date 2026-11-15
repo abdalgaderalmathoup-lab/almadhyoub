@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mahasib-offline-v12';
+const CACHE_NAME = 'mahasib-offline-v13';
 const ASSETS = [
   './',
   './index.html',

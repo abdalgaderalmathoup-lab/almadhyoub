@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>محاسب المذيوب — نظام محاسبي متكامل</title>
+
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="application-name" content="محاسب المذيوب">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
+    <link rel="apple-touch-icon" href="./icon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+    <!-- ============ شاشة تسجيل الدخول ============ -->
+    <div id="auth-screen" style="display:none">
+        <div class="auth-card">
+            <div class="auth-logo"><i class="fas fa-calculator"></i></div>
+            <div class="auth-title">محاسب المذيوب</div>
+            <div class="auth-sub">نظام محاسبي متكامل — إعداد م. عبدالقادر حسين</div>
+            <div class="auth-error" id="auth-error"></div>
+            <input type="email" id="auth-email" class="auth-input" placeholder="البريد الإلكتروني" autocomplete="username">
+            <input type="password" id="auth-password" class="auth-input" placeholder="كلمة المرور" autocomplete="current-password">
+            <button class="auth-btn auth-btn-primary" id="btn-login" onclick="handleLogin()">تسجيل الدخول</button>
+            <button class="auth-btn auth-btn-secondary" id="btn-signup" onclick="handleSignup()">إنشاء حساب جديد</button>
+            <button class="auth-btn" style="background:transparent;color:var(--primary);border:1.5px solid var(--border);font-weight:600" onclick="skipAuth()">متابعة بدون حساب</button>
+            <div class="auth-loading" id="auth-loading">جاري التحميل...</div>
+        </div>
+    </div>
+
+    <!-- ============ التطبيق ============ -->
+    <div id="app">
+        <header class="app-header">
+            <div class="brand"><i class="fas fa-calculator"></i><span id="header-title">الرئيسية</span></div>
+            <div class="header-actions">
+                <button class="hicon" onclick="showView('reports')" title="التقارير"><i class="fas fa-chart-pie"></i></button>
+                <button class="hicon" onclick="toggleDrawer(true)" title="القائمة"><i class="fas fa-bars"></i></button>
+            </div>
+        </header>
+
+        <!-- Drawer -->
+        <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer(false)">
+            <aside class="drawer" onclick="event.stopPropagation()">
+                <div class="drawer-head">
+                    <div class="d-title">محاسب المذيوب</div>
+                    <div class="d-sub" id="drawer-user-email">—</div>
+                </div>
+                <div class="drawer-body" id="drawer-list">
+                    <button class="d-item" id="auth-menu-item" onclick="openAuthModal()"><i class="fas fa-sign-in-alt"></i><span id="auth-menu-label">تسجيل الدخول / المزامنة</span></button>
+                    <div class="d-sep"></div>
+                    <button class="d-item" onclick="go('expenses')"><i class="fas fa-file-invoice-dollar"></i>المصروفات</button>
+                    <button class="d-item" onclick="go('customers')"><i class="fas fa-users"></i>العملاء</button>
+                    <button class="d-item" onclick="go('suppliers')"><i class="fas fa-truck"></i>الموردون</button>
+                    <button class="d-item" onclick="go('accounts')"><i class="fas fa-book"></i>شجرة الحسابات</button>
+                    <button class="d-item" onclick="go('transactions')"><i class="fas fa-list-alt"></i>سجل العمليات</button>
+                    <div class="d-sep"></div>
+                    <button class="d-item" id="admin-menu-item" style="display:none" onclick="go('admin')"><i class="fas fa-user-shield"></i>إدارة المستخدمين</button>
+                    <button class="d-item" onclick="exportBackup()"><i class="fas fa-download"></i>نسخة احتياطية</button>
+                    <button class="d-item" onclick="document.getElementById('restore-input').click()"><i class="fas fa-upload"></i>استعادة نسخة</button>
+                    <input type="file" id="restore-input" accept=".json" style="display:none" onchange="importBackup(event)">
+                    <div class="d-sep"></div>
+                    <button class="d-item" onclick="openRatesModal()"><i class="fas fa-money-bill-wave"></i>أسعار الصرف</button>
+                    <button class="d-item" onclick="clearCache()"><i class="fas fa-broom"></i>تحديث التطبيق</button>
+                    <button class="d-item danger" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i>تسجيل الخروج</button>
+                </div>
+            </aside>
+        </div>
+
+        <!-- الصفحات -->
+        <main class="pages">
+            <!-- الرئيسية -->
+            <section class="view active" id="view-home">
+                <div class="view-title">لوحة التحكم</div>
+                <div class="view-sub" id="home-date"></div>
+                <div id="home-alerts"></div>
+                <div class="stats-grid" id="home-stats"></div>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-bolt"></i>إجراءات سريعة</div>
+                    <div class="form-grid">
+                        <button class="btn btn-success" onclick="openInvoiceForm('sale')"><i class="fas fa-plus"></i>فاتورة مبيعات</button>
+                        <button class="btn btn-warning" onclick="openInvoiceForm('purch')"><i class="fas fa-plus"></i>فاتورة مشتريات</button>
+                        <button class="btn btn-primary" onclick="openVoucherForm()"><i class="fas fa-receipt"></i>سند قبض/صرف</button>
+                        <button class="btn btn-ghost" onclick="openExpenseForm()"><i class="fas fa-minus-circle"></i>مصروف</button>
+                        <button class="btn btn-ghost" onclick="openJournalForm()"><i class="fas fa-pen"></i>قيد يومية</button>
+                        <button class="btn btn-ghost" onclick="openItemForm()"><i class="fas fa-box"></i>صنف جديد</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-clock"></i>آخر العمليات</div>
+                    <div id="home-recent"></div>
+                </div>
+            </section>
+
+            <!-- المبيعات -->
+            <section class="view" id="view-sales">
+                <div class="view-title">فواتير المبيعات</div>
+                <div class="view-sub">إنشاء وعرض فواتير البيع</div>
+                <input type="text" class="search-box" id="sales-search" placeholder="🔍 بحث برقم الفاتورة أو العميل..." oninput="renderSales()">
+                <button class="btn btn-success btn-block" style="margin-bottom:14px" onclick="openInvoiceForm('sale')"><i class="fas fa-plus"></i>فاتورة مبيعات جديدة</button>
+                <div class="card"><div id="sales-list"></div></div>
+            </section>
+
+            <!-- المشتريات -->
+            <section class="view" id="view-purchases">
+                <div class="view-title">فواتير المشتريات</div>
+                <div class="view-sub">إنشاء وعرض فواتير الشراء</div>
+                <input type="text" class="search-box" id="purch-search" placeholder="🔍 بحث برقم الفاتورة أو المورد..." oninput="renderPurchases()">
+                <button class="btn btn-warning btn-block" style="margin-bottom:14px" onclick="openInvoiceForm('purch')"><i class="fas fa-plus"></i>فاتورة مشتريات جديدة</button>
+                <div class="card"><div id="purch-list"></div></div>
+            </section>
+
+            <!-- المخزون -->
+            <section class="view" id="view-inventory">
+                <div class="view-title">المخزون والأصناف</div>
+                <div class="view-sub">أرصدة الأصناف وتنبيهات النواقص</div>
+                <input type="text" class="search-box" id="items-search" placeholder="🔍 بحث بالاسم أو الباركود..." oninput="renderItems()">
+                <button class="btn btn-primary btn-block" style="margin-bottom:14px" onclick="openItemForm()"><i class="fas fa-plus"></i>صنف جديد</button>
+                <div id="items-alerts"></div>
+                <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>الصنف</th><th>الباركود</th><th>الكمية</th><th>سعر البيع</th><th>التكلفة</th><th></th></tr></thead><tbody id="items-tbody"></tbody></table></div></div>
+            </section>
+
+            <!-- الحسابات -->
+            <section class="view" id="view-accounts">
+                <div class="view-title">الحسابات والسندات</div>
+                <div class="view-sub">شجرة الحسابات وأرصدتها</div>
+                <div class="form-grid" style="margin-bottom:14px">
+                    <button class="btn btn-primary" onclick="openVoucherForm()"><i class="fas fa-receipt"></i>سند قبض/صرف</button>
+                    <button class="btn btn-soft" onclick="openJournalForm()"><i class="fas fa-pen"></i>قيد يومية</button>
+                    <button class="btn btn-ghost" onclick="openTransferForm()"><i class="fas fa-exchange-alt"></i>تحويل</button>
+                    <button class="btn btn-ghost" onclick="openAccountForm()"><i class="fas fa-folder-plus"></i>حساب جديد</button>
+                </div>
+                <div class="card"><div class="card-title"><i class="fas fa-book"></i>دليل الحسابات والأرصدة</div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>الكود</th><th>الحساب</th><th>النوع</th><th>الرصيد ($)</th></tr></thead><tbody id="accounts-tbody"></tbody></table></div></div>
+                <div class="card"><div class="card-title"><i class="fas fa-list"></i>سندات وقيود أخيرة</div><div id="accounts-docs"></div></div>
+            </section>
+
+            <!-- التقارير -->
+            <section class="view" id="view-reports">
+                <div class="view-title">التقارير المالية</div>
+                <div class="view-sub">أرباح وخسائر — ميزان مراجعة — أرصدة أطراف</div>
+                <div class="stats-grid" id="rep-stats"></div>
+                <div class="card rep-section"><h4>قائمة الدخل</h4><div id="rep-pnl"></div></div>
+                <div class="card rep-section"><h4>ميزان المراجعة (أرصدة الحسابات)</h4><div class="tbl-wrap"><table class="tbl"><thead><tr><th>الكود</th><th>الحساب</th><th>مدين ($)</th><th>دائن ($)</th></tr></thead><tbody id="rep-tb"></tbody></table></div></div>
+                <div class="card rep-section"><h4>أرصدة العملاء والموردين</h4><div id="rep-parties"></div></div>
+            </section>
+
+            <!-- المصروفات -->
+            <section class="view" id="view-expenses">
+                <div class="view-title">المصروفات</div>
+                <div class="view-sub">تسجيل ومتابعة المصروفات</div>
+                <button class="btn btn-danger btn-block" style="margin-bottom:14px" onclick="openExpenseForm()"><i class="fas fa-plus"></i>مصروف جديد</button>
+                <div class="card"><div id="expenses-list"></div></div>
+            </section>
+
+            <!-- العملاء -->
+            <section class="view" id="view-customers">
+                <div class="view-title">العملاء</div>
+                <div class="view-sub">أرصدة وبيانات العملاء</div>
+                <button class="btn btn-primary btn-block" style="margin-bottom:14px" onclick="openPartyForm('customer')"><i class="fas fa-plus"></i>عميل جديد</button>
+                <div class="card"><div id="customers-list"></div></div>
+            </section>
+
+            <!-- الموردون -->
+            <section class="view" id="view-suppliers">
+                <div class="view-title">الموردون</div>
+                <div class="view-sub">أرصدة وبيانات الموردين</div>
+                <button class="btn btn-primary btn-block" style="margin-bottom:14px" onclick="openPartyForm('supplier')"><i class="fas fa-plus"></i>مورد جديد</button>
+                <div class="card"><div id="suppliers-list"></div></div>
+            </section>
+
+            <!-- سجل العمليات -->
+            <section class="view" id="view-transactions">
+                <div class="view-title">سجل العمليات</div>
+                <div class="view-sub">كل الحركات المالية في مكان واحد</div>
+                <select class="fselect" id="tx-filter" onchange="renderTransactions()" style="margin-bottom:10px">
+                    <option value="ALL">كل العمليات</option>
+                    <option value="SALES">مبيعات</option><option value="PURCH">مشتريات</option>
+                    <option value="EXPENSE">مصروفات</option><option value="VOUCHER">سندات</option>
+                    <option value="TRANSFER">تحويلات</option><option value="JOURNAL">قيود</option>
+                    <option value="PAYMENT">دفعات أطراف</option>
+                </select>
+                <input type="text" class="search-box" id="tx-search" placeholder="🔍 بحث..." oninput="renderTransactions()">
+                <div class="card"><div id="tx-list"></div></div>
+            </section>
+
+            <!-- الإدارة -->
+            <section class="view" id="view-admin">
+                <div class="view-title">إدارة المستخدمين</div>
+                <div class="view-sub">المستخدمون المسجلون في النظام</div>
+                <div class="card"><div id="admin-users-list"><p class="empty-state">جاري التحميل...</p></div></div>
+            </section>
+        </main>
+
+        <!-- شريط التنقل السفلي -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-view="home" onclick="showView('home')"><i class="fas fa-home"></i>الرئيسية<span class="nav-dot"></span></button>
+            <button class="nav-item" data-view="sales" onclick="showView('sales')"><i class="fas fa-shopping-cart"></i>المبيعات<span class="nav-dot"></span></button>
+            <button class="nav-item" data-view="purchases" onclick="showView('purchases')"><i class="fas fa-cart-arrow-down"></i>المشتريات<span class="nav-dot"></span></button>
+            <button class="nav-item" data-view="inventory" onclick="showView('inventory')"><i class="fas fa-warehouse"></i>المخزون<span class="nav-dot"></span></button>
+            <button class="nav-item" data-view="reports" onclick="showView('reports')"><i class="fas fa-chart-pie"></i>التقارير<span class="nav-dot"></span></button>
+        </nav>
+    </div>
+
+    <!-- حاوية النوافذ المنبثقة (تُبنى ديناميكياً) -->
+    <div id="modal-root"></div>
+    <div id="print-area"></div>
+    <div id="toast-wrap"></div>
+
+    <script type="module" src="./app.js"></script>
+</body>
+</html>

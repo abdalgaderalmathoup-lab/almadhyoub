@@ -210,7 +210,7 @@
                     <div class="drawer-item" onclick="showToast('📞 للتواصل: عبدالقادر المذيوب','info')">
                         <i class="fas fa-phone-alt drawer-icon"></i><span>للتواصل والدعم</span>
                     </div>
-                    <div class="drawer-item" onclick="showToast('محاسب المذيوب v7.0','info')">
+                    <div class="drawer-item" onclick="showToast('محاسب المذيوب v8.0 — نظام محاسبي متكامل','info')">
                         <i class="fas fa-info-circle drawer-icon"></i><span>حول البرنامج</span>
                     </div>
                     <div class="drawer-item" onclick="handleLogout()">
@@ -379,6 +379,7 @@
                         <div class="form-group"><label class="form-label">المبلغ</label><div style="display:flex; gap:4px;"><input type="number" step="0.01" min="0.01" class="form-input" id="v-amt" required><select class="form-select" id="v-curr" style="width:80px;"><option value="USD">$</option><option value="YER">ر.ي</option><option value="SAR">ر.س</option></select></div></div>
                     </div>
                     <div class="form-group"><label class="form-label">الجهة / الحساب</label><input type="text" class="form-input" id="v-party" required></div>
+                    <div class="form-group"><label class="form-label">الحساب المحاسبي</label><select class="form-select" id="v-acc"></select></div>
                     <div class="form-group"><label class="form-label">البيان</label><input type="text" class="form-input" id="v-notes" required></div>
                     <button type="submit" class="btn-action">💾 حفظ السند</button>
                 </div>
@@ -415,7 +416,7 @@
                 <button class="btn-action" style="background:var(--warning); margin-bottom:8px;" onclick="openModal('modal-customers')">👥 إدارة العملاء</button>
                 <button class="btn-action" style="background:#475569;" onclick="openModal('modal-suppliers')">🚚 إدارة الموردين</button>
             </div>
-            <div class="card" style="overflow-x:auto;"><table class="data-table"><thead><tr><th>الكود</th><th>الحساب</th><th>التصنيف</th></tr></thead><tbody id="accounts-list-tbody"></tbody></table></div>
+            <div class="card" style="overflow-x:auto;"><table class="data-table"><thead><tr><th>الكود</th><th>الحساب</th><th>التصنيف</th><th>الرصيد ($)</th></tr></thead><tbody id="accounts-list-tbody"></tbody></table></div>
         </div>
 
         <div class="modal-page" id="modal-customers">
@@ -506,6 +507,14 @@
                     <div>📈 الربح الإجمالي: <strong id="rep-gp" style="color:var(--primary);">$0.00</strong></div>
                     <div>💵 صافي التدفق النقدي: <strong id="rep-cash" style="color:var(--info);">$0.00</strong></div>
                 </div>
+            </div>
+            <div class="card" style="overflow-x:auto;">
+                <div style="font-weight:bold; margin-bottom:8px; color:var(--primary);">أرصدة الحسابات (ميزان المراجعة)</div>
+                <table class="data-table"><thead><tr><th>الكود</th><th>الحساب</th><th>الرصيد ($)</th></tr></thead><tbody id="rep-acc-balances"></tbody></table>
+            </div>
+            <div class="card" style="overflow-x:auto;">
+                <div style="font-weight:bold; margin-bottom:8px; color:var(--primary);">أرصدة العملاء والموردين (آجل)</div>
+                <table class="data-table"><thead><tr><th>الاسم</th><th>النوع</th><th>الرصيد ($)</th></tr></thead><tbody id="rep-party-balances"></tbody></table>
             </div>
         </div>
 
@@ -692,8 +701,8 @@
             catch (e) { console.error(e); showToast('تم الحفظ محلياً (بانتظار الاتصال)', 'warning'); }
         }
 
-        async function deleteFromCloud(colName, id) {
-            if (!confirm('هل أنت متأكد من الحذف؟')) return;
+        async function deleteFromCloud(colName, id, skipConfirm = false) {
+            if (!skipConfirm && !confirm('هل أنت متأكد من الحذف؟')) return;
             DB[colName] = DB[colName].filter(x => String(x.id || x.code) !== String(id));
             renderAll();
             if (!currentUser) return;
@@ -740,7 +749,7 @@
             if (id === 'modal-customers') renderCustomersList('');
             if (id === 'modal-suppliers') renderSuppliersList('');
             if (id === 'modal-items') renderItemsList('');
-            if (id === 'modal-accounts' || id === 'modal-transfer' || id === 'modal-journal-entry') populateAccountSelects();
+            if (id === 'modal-accounts' || id === 'modal-transfer' || id === 'modal-journal-entry' || id === 'modal-vouchers') populateAccountSelects();
             if (id === 'modal-currencies') {
                 document.getElementById('rate-yer').value = DB.rates.YER;
                 document.getElementById('rate-sar').value = DB.rates.SAR;
@@ -791,7 +800,7 @@
 
         function populateAccountSelects() {
             const opts = DB.accs.map(a => `<option value="${a.code}">${a.name} (${a.code})</option>`).join('');
-            ['tr-from', 'tr-to', 'je-acc'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = opts; });
+            ['tr-from', 'tr-to', 'je-acc', 'v-acc'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = opts; });
         }
 
         function updateRates() {
@@ -825,12 +834,18 @@
 
         async function handleItemSubmit(e) {
             e.preventDefault();
+            const priceUSD = parseFloat(document.getElementById('item-price').value);
+            const costUSD = parseFloat(document.getElementById('item-cost').value);
+            const qty = parseInt(document.getElementById('item-qty').value);
+            if (!isFinite(priceUSD) || priceUSD < 0 || !isFinite(costUSD) || costUSD < 0 || !isFinite(qty) || qty < 0) {
+                return showToast('يرجى إدخال قيم صحيحة', 'error');
+            }
             const item = {
                 code: document.getElementById('item-code').value.trim(),
                 name: document.getElementById('item-name').value.trim(),
-                priceUSD: parseFloat(document.getElementById('item-price').value),
-                costUSD: parseFloat(document.getElementById('item-cost').value),
-                qty: parseInt(document.getElementById('item-qty').value)
+                priceUSD: priceUSD,
+                costUSD: costUSD,
+                qty: qty
             };
             if (DB.items.some(x => x.code === item.code)) return showToast('الباركود مستخدم مسبقاً', 'error');
             await saveToCloud('items', item.code, item);
@@ -857,7 +872,9 @@
             const idx = parseInt(document.getElementById('sales-item-select').value);
             const q = parseInt(document.getElementById('sales-qty').value);
             const item = DB.items[idx];
-            if (!item || item.qty < q) return showToast('المخزون لا يكفي', 'error');
+            if (!item) return showToast('اختر صنفاً', 'error');
+            if (!Number.isInteger(q) || q < 1) return showToast('الكمية يجب أن تكون عدداً صحيحاً موجباً', 'error');
+            if (item.qty < q) return showToast('المخزون لا يكفي (المتاح: ' + item.qty + ')', 'error');
 
             const curr = document.getElementById('sales-curr').value;
             const amtUSD = item.priceUSD * q;
@@ -887,7 +904,8 @@
             const idx = parseInt(document.getElementById('purch-item-select').value);
             const q = parseInt(document.getElementById('purch-qty').value);
             const item = DB.items[idx];
-            if (!item) return;
+            if (!item) return showToast('اختر صنفاً', 'error');
+            if (!Number.isInteger(q) || q < 1) return showToast('الكمية يجب أن تكون عدداً صحيحاً موجباً', 'error');
 
             const curr = document.getElementById('purch-curr').value;
             const amtUSD = item.costUSD * q;
@@ -915,6 +933,7 @@
         async function handleVoucherSubmit(e) {
             e.preventDefault();
             const amtVal = parseFloat(document.getElementById('v-amt').value);
+            if (!isFinite(amtVal) || amtVal <= 0) return showToast('أدخل مبلغاً صحيحاً', 'error');
             const curr = document.getElementById('v-curr').value;
             let amtUSD = amtVal;
             if (curr === 'YER') amtUSD = amtVal / DB.rates.YER;
@@ -924,6 +943,7 @@
             const v = {
                 id: Date.now(), vouchNo: 'V-' + DB.counters.voucher, date: new Date().toISOString(),
                 type: document.getElementById('v-type').value,
+                accCode: document.getElementById('v-acc').value || '101',
                 party: document.getElementById('v-party').value.trim(),
                 notes: document.getElementById('v-notes').value.trim(),
                 amtUSD: amtUSD, curr: curr, display: amtVal.toFixed(2) + ' ' + curr
@@ -940,6 +960,7 @@
             if (from === to) return showToast('لا يمكن التحويل لنفس الحساب', 'error');
 
             const amtVal = parseFloat(document.getElementById('tr-amt').value);
+            if (!isFinite(amtVal) || amtVal <= 0) return showToast('أدخل مبلغاً صحيحاً', 'error');
             const curr = document.getElementById('tr-curr').value;
             let amtUSD = amtVal;
             if (curr === 'YER') amtUSD = amtVal / DB.rates.YER;
@@ -964,6 +985,7 @@
             e.preventDefault();
             const accCode = document.getElementById('je-acc').value;
             const amtVal = parseFloat(document.getElementById('je-amt').value);
+            if (!isFinite(amtVal) || amtVal <= 0) return showToast('أدخل مبلغاً صحيحاً', 'error');
             const curr = document.getElementById('je-curr').value;
             let amtUSD = amtVal;
             if (curr === 'YER') amtUSD = amtVal / DB.rates.YER;
@@ -984,11 +1006,80 @@
         }
 
         // ============================================================
+        // 5.5 Account Balances (محرك الأرصدة المحاسبية)
+        // ============================================================
+        // اصطلاح: الموجب = مدين، السالب = دائن
+        function computeAccountBalances() {
+            const bal = {};
+            DB.accs.forEach(a => bal[a.code] = 0);
+            const add = (code, amt) => { if (code && bal[code] !== undefined) bal[code] += amt; };
+
+            DB.journal.forEach(j => add(j.accCode, (j.type === 'DEPOSIT' ? 1 : -1) * (j.amtUSD || 0)));
+            DB.transfers.forEach(t => { add(t.toCode, t.amtUSD || 0); add(t.fromCode, -(t.amtUSD || 0)); });
+            DB.vouchers.forEach(v => add(v.accCode || '101', (v.type === 'RECEIPT' ? 1 : -1) * (v.amtUSD || 0)));
+
+            DB.sales.forEach(s => {
+                const amt = s.amtUSD || 0;
+                const cost = (s.costUSD || 0) * (s.qty || 0);
+                if (s.payType === 'CREDIT') add('102', amt); else add('101', amt);
+                add('401', amt);
+                add('103', -cost);
+                add('501', cost);
+            });
+
+            DB.purch.forEach(p => {
+                const amt = p.amtUSD || 0;
+                const cost = (p.costUSD || 0) * (p.qty || 0);
+                if (p.payType === 'CREDIT') add('201', -amt); else add('101', -amt);
+                add('103', cost);
+            });
+
+            return bal;
+        }
+
+        function partyBalances() {
+            const cust = {}, supp = {};
+            DB.sales.forEach(s => {
+                if (s.payType !== 'CREDIT') return;
+                const n = (s.customer || 'بدون اسم').trim();
+                cust[n] = (cust[n] || 0) + (s.amtUSD || 0);
+            });
+            DB.purch.forEach(p => {
+                if (p.payType !== 'CREDIT') return;
+                const n = (p.supplier || 'بدون اسم').trim();
+                supp[n] = (supp[n] || 0) + (p.amtUSD || 0);
+            });
+            return { customers: cust, suppliers: supp };
+        }
+
+        async function deleteSale(id) {
+            const s = DB.sales.find(x => x.id === id);
+            if (!s) return;
+            if (!confirm('حذف الفاتورة ' + s.invNo + '؟\nسيتم إرجاع الكمية للمخزون.')) return;
+            const item = DB.items.find(i => i.code === s.itemCode);
+            if (item) await saveToCloud('items', item.code, { ...item, qty: (item.qty || 0) + (s.qty || 0) });
+            await deleteFromCloud('sales', id, true);
+        }
+
+        async function deletePurch(id) {
+            const p = DB.purch.find(x => x.id === id);
+            if (!p) return;
+            if (!confirm('حذف الفاتورة ' + p.invNo + '؟\nسيتم خصم الكمية من المخزون.')) return;
+            const item = DB.items.find(i => i.code === p.itemCode);
+            if (item) {
+                const newQty = (item.qty || 0) - (p.qty || 0);
+                if (newQty < 0) return showToast('لا يمكن الحذف — الكمية المباعة تجاوزت المتاح', 'error');
+                await saveToCloud('items', item.code, { ...item, qty: newQty });
+            }
+            await deleteFromCloud('purch', id, true);
+        }
+
+        // ============================================================
         // 6. Backup & Restore
         // ============================================================
         function backupDatabase() {
             const backup = {
-                app: 'MahasibAlMadhyoub', version: '7.0', timestamp: new Date().toISOString(),
+                app: 'MahasibAlMadhyoub', version: '8.0', timestamp: new Date().toISOString(),
                 rates: DB.rates, items: DB.items, sales: DB.sales, purch: DB.purch, vouchers: DB.vouchers, transfers: DB.transfers, journal: DB.journal, customers: DB.customers, suppliers: DB.suppliers
             };
             const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backup, null, 2));
@@ -1001,10 +1092,10 @@
 
         function triggerRestoreInput() { document.getElementById('restoreFileInput').click(); }
 
-        function restoreDatabase(event) {
+        async function restoreDatabase(event) {
             const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
                     if (Array.isArray(imported.items)) DB.items = imported.items;
@@ -1016,9 +1107,28 @@
                     if (Array.isArray(imported.customers)) DB.customers = imported.customers;
                     if (Array.isArray(imported.suppliers)) DB.suppliers = imported.suppliers;
                     if (imported.rates) DB.rates = imported.rates;
-                    
+                    localStorage.setItem('alm_rates', JSON.stringify(DB.rates));
+
                     renderAll();
                     showToast('تم استرجاع البيانات للعرض', 'success');
+
+                    // رفع البيانات المسترجعة إلى Firestore حتى لا تضيع
+                    if (currentUser) {
+                        const cols = ['items', 'sales', 'purch', 'vouchers', 'transfers', 'journal', 'customers', 'suppliers'];
+                        let done = 0, total = 0;
+                        cols.forEach(c => total += (imported[c] || []).length);
+                        if (total === 0) return;
+                        showToast('جاري رفع ' + total + ' سجل إلى السحابة...', 'info');
+                        for (const c of cols) {
+                            for (const d of (imported[c] || [])) {
+                                const key = String(d.id || d.code);
+                                try { await setDoc(doc(db, "users", currentUser.uid, c, key), d); }
+                                catch (e) { console.error('restore push failed', c, key, e); }
+                                done++;
+                            }
+                        }
+                        showToast('تم رفع ' + done + ' سجل إلى السحابة', 'success');
+                    }
                 } catch (err) { showToast('ملف غير صالح', 'error'); }
             };
             reader.readAsText(file); event.target.value = '';
@@ -1112,11 +1222,12 @@
             const c = document.getElementById('sales-list-tbody');
             if (DB.sales.length === 0) return c.innerHTML = '<p style="text-align:center; padding:20px;">لا توجد مبيعات</p>';
             c.innerHTML = DB.sales.map(s => `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
-                <div><strong>${escapeHtml(s.invNo)}</strong><br><small>${escapeHtml(s.customer)}</small></div>
+                <div><strong>${escapeHtml(s.invNo)}</strong><br><small>${escapeHtml(s.customer)}</small>${s.payType === 'CREDIT' ? ' <span style="background:#fef3c7;color:#b45309;font-size:10px;padding:1px 6px;border-radius:8px;">آجل</span>' : ''}</div>
                 <div style="text-align:left;"><span style="color:#10b981; font-weight:bold;">${escapeHtml(s.display)}</span><br>
                 <div style="display:flex; gap:4px; margin-top:4px; justify-content:flex-end;">
                     <button onclick="window.app.print('sales', ${s.id})" style="font-size:11px; border:1px solid #ccc; padding:2px 6px; border-radius:4px;">🖨️</button>
                     <button onclick="window.app.share('sales', ${s.id})" style="font-size:11px; border:1px solid #25D366; color:#25D366; background:#fff; padding:2px 6px; border-radius:4px;">🔗</button>
+                    <button onclick="window.app.delSale(${s.id})" style="font-size:11px; border:1px solid #ef4444; color:#ef4444; background:#fff; padding:2px 6px; border-radius:4px;">🗑️</button>
                 </div></div>
             </div>`).join('');
         }
@@ -1125,11 +1236,12 @@
             const c = document.getElementById('purchases-list-tbody');
             if (DB.purch.length === 0) return c.innerHTML = '<p style="text-align:center; padding:20px;">لا توجد مشتريات</p>';
             c.innerHTML = DB.purch.map(p => `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
-                <div><strong>${escapeHtml(p.invNo)}</strong><br><small>${escapeHtml(p.supplier)}</small></div>
+                <div><strong>${escapeHtml(p.invNo)}</strong><br><small>${escapeHtml(p.supplier)}</small>${p.payType === 'CREDIT' ? ' <span style="background:#fef3c7;color:#b45309;font-size:10px;padding:1px 6px;border-radius:8px;">آجل</span>' : ''}</div>
                 <div style="text-align:left;"><span style="color:#f59e0b; font-weight:bold;">${escapeHtml(p.display)}</span><br>
                 <div style="display:flex; gap:4px; margin-top:4px; justify-content:flex-end;">
                     <button onclick="window.app.print('purch', ${p.id})" style="font-size:11px; border:1px solid #ccc; padding:2px 6px; border-radius:4px;">🖨️</button>
                     <button onclick="window.app.share('purch', ${p.id})" style="font-size:11px; border:1px solid #25D366; color:#25D366; background:#fff; padding:2px 6px; border-radius:4px;">🔗</button>
+                    <button onclick="window.app.delPurch(${p.id})" style="font-size:11px; border:1px solid #ef4444; color:#ef4444; background:#fff; padding:2px 6px; border-radius:4px;">🗑️</button>
                 </div></div>
             </div>`).join('');
         }
@@ -1176,7 +1288,26 @@
         }
 
         function renderAll() {
-            document.getElementById('accounts-list-tbody').innerHTML = DB.accs.map(a => `<tr><td>${a.code}</td><td>${a.name}</td><td>${a.type}</td></tr>`).join('');
+            const bal = computeAccountBalances();
+            document.getElementById('accounts-list-tbody').innerHTML = DB.accs.map(a => {
+                const b = bal[a.code] || 0;
+                const sign = b < 0 ? '-' : '';
+                return `<tr><td>${a.code}</td><td>${escapeHtml(a.name)}</td><td>${a.type}</td><td style="font-weight:bold; color:${b < 0 ? 'var(--danger)' : 'var(--success)'};">${sign}$${fmt(Math.abs(b))}</td></tr>`;
+            }).join('');
+
+            const pb = partyBalances();
+            const pbRows = [];
+            Object.entries(pb.customers).forEach(([n, v]) => pbRows.push(`<tr><td>${escapeHtml(n)}</td><td>عميل (مدين)</td><td style="color:var(--info); font-weight:bold;">$${fmt(v)}</td></tr>`));
+            Object.entries(pb.suppliers).forEach(([n, v]) => pbRows.push(`<tr><td>${escapeHtml(n)}</td><td>مورد (دائن)</td><td style="color:var(--warning); font-weight:bold;">$${fmt(v)}</td></tr>`));
+            document.getElementById('rep-party-balances').innerHTML = pbRows.length
+                ? pbRows.join('')
+                : '<tr><td colspan="3" style="text-align:center;">لا توجد أرصدة آجلة</td></tr>';
+
+            document.getElementById('rep-acc-balances').innerHTML = DB.accs.map(a => {
+                const b = bal[a.code] || 0;
+                const sign = b < 0 ? '-' : '';
+                return `<tr><td>${a.code}</td><td>${escapeHtml(a.name)}</td><td style="font-weight:bold;">${sign}$${fmt(Math.abs(b))}</td></tr>`;
+            }).join('');
             renderItemsList(document.getElementById('search-items').value);
             
             document.getElementById('customers-list').innerHTML = DB.customers.map(c => `<option value="${escapeHtml(c.name)}">`).join('');
@@ -1197,7 +1328,7 @@
             document.getElementById('rep-p').innerText = '$' + fmt(totalPurch);
             document.getElementById('rep-cogs').innerText = '$' + fmt(cogs);
             document.getElementById('rep-gp').innerText = '$' + fmt(totalSales - cogs);
-            document.getElementById('rep-cash').innerText = '$' + fmt(cashIn - cashOut);
+            document.getElementById('rep-cash').innerText = '$' + fmt(bal['101'] || 0) + '  (سندات: ' + fmt(cashIn - cashOut) + ')';
 
             const ry = document.getElementById('rate-yer');
             const rs = document.getElementById('rate-sar');
@@ -1248,7 +1379,9 @@
                 if (d) printDocument(type, d);
             },
             share: (type, id) => shareDocument(type, id),
-            delete: (colName, id) => deleteFromCloud(colName, id)
+            delete: (colName, id) => deleteFromCloud(colName, id),
+            delSale: (id) => deleteSale(id),
+            delPurch: (id) => deletePurch(id)
         };
 
         window.handleLogin = handleLogin;
@@ -1268,6 +1401,10 @@
         window.handleVoucherSubmit = handleVoucherSubmit;
         window.handleTransferSubmit = handleTransferSubmit;
         window.handleJournalSubmit = handleJournalSubmit;
+        window.showToast = showToast;
+        window.renderAll = renderAll;
+        window.renderCustomersList = renderCustomersList;
+        window.renderSuppliersList = renderSuppliersList;
         window.renderTransactions = renderTransactions;
         window.renderSalesList = renderSalesList;
         window.renderPurchasesList = renderPurchasesList;

@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>محاسب المذيوب</title>
+    <title>محاسب المذيوب — نظام محاسبي متكامل</title>
 
-    <!-- ===== PWA Meta Tags ===== -->
     <meta name="theme-color" content="#1e3a8a">
     <meta name="application-name" content="محاسب المذيوب">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,145 +12,20 @@
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <link rel="apple-touch-icon" href="./icon.svg">
-    
-    <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        :root {
-            --primary: #1e3a8a; /* أزرق ملكي غامق */
-            --primary-light: #3b82f6; /* أزرق فاتح */
-            --bg-body: #f8fafc;
-            --card-bg: #ffffff;
-            --text-dark: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --info: #06b6d4;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-body); margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; }
-
-        /* ===== Auth Screen ===== */
-        #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--primary), #0f172a); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; padding: 20px; color: #fff; }
-        .auth-card { background: #fff; width: 100%; max-width: 400px; border-radius: 15px; padding: 25px; color: var(--text-dark); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .auth-logo { font-size: 40px; text-align: center; margin-bottom: 10px; color: var(--primary); }
-        .auth-title { text-align: center; font-size: 22px; font-weight: bold; margin-bottom: 5px; color: var(--primary); }
-        .auth-subtitle { text-align: center; font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
-        .auth-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; background: #f8fafc; }
-        .auth-input:focus { border-color: var(--primary); background: #fff; }
-        .auth-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
-        .auth-btn-primary { background: var(--primary); color: #fff; }
-        .auth-btn-secondary { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
-        .auth-error { color: var(--danger); font-size: 13px; text-align: center; margin-bottom: 10px; display: none; font-weight: bold; background: #fee2e2; padding: 8px; border-radius: 6px; }
-        .auth-loading { display: none; text-align: center; color: var(--primary); font-weight: bold; margin-top: 10px; }
-
-        /* ===== App UI ===== */
-        .phone-wrapper { width: 100%; height: 100vh; background: var(--bg-body); display: none; flex-direction: column; overflow: hidden; position: relative; }
-        .phone-wrapper.active { display: flex; }
-        
-        .main-header { background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 16px; padding-top: calc(16px + env(safe-area-inset-top)); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 99; }
-        .header-title-area { display: flex; align-items: center; gap: 16px; }
-        .menu-toggle-btn { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 4px; }
-        .app-brand-name { font-size: 20px; font-weight: bold; letter-spacing: -0.5px; }
-        .header-icons-area { display: flex; align-items: center; gap: 20px; }
-        .header-icon { font-size: 22px; color: #fff; cursor: pointer; }
-
-        /* ===== Drawer Menu ===== */
-        .drawer-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; opacity: 0; transition: opacity 0.3s ease; }
-        .drawer-overlay.active { display: block; opacity: 1; }
-        .drawer-menu { position: absolute; top: 0; right: -320px; width: 300px; height: 100%; background: #fff; z-index: 1000; transition: right 0.3s ease; display: flex; flex-direction: column; box-shadow: -4px 0 15px rgba(0,0,0,0.2); padding-top: env(safe-area-inset-top); }
-        .drawer-overlay.active .drawer-menu { right: 0; }
-        .drawer-header { background: var(--primary); color: #fff; padding: 25px 20px; display: flex; align-items: center; gap: 14px; }
-        .drawer-logo-icon { width: 50px; height: 50px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid rgba(255,255,255,0.3); }
-        .drawer-title-container { display: flex; flex-direction: column; }
-        .drawer-title { font-size: 18px; font-weight: bold; }
-        .drawer-subtitle { font-size: 11px; opacity: 0.8; margin-top: 4px; }
-        .drawer-list { flex: 1; overflow-y: auto; padding: 0; padding-bottom: env(safe-area-inset-bottom); }
-        .drawer-item { display: flex; align-items: center; justify-content: flex-start; padding: 16px 20px; border-bottom: 1px solid var(--border); color: var(--text-dark); font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.15s; gap: 16px; }
-        .drawer-item:hover { background: #f1f5f9; }
-        .drawer-icon { font-size: 20px; color: var(--primary); width: 30px; text-align: center; }
-
-        /* ===== Main Content ===== */
-        .app-viewport { flex: 1; background: var(--bg-body); overflow-y: auto; padding-bottom: 20px; }
-        
-        .main-top-grid { padding: 20px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; background: #fff; border-bottom: 1px solid var(--border); }
-        .grid-btn-wrapper { display: flex; align-items: center; justify-content: center; position: relative; }
-        .grid-btn { flex: 1; background: transparent; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; }
-        .grid-btn:active { transform: scale(0.95); }
-        .grid-btn-icon { font-size: 36px; margin-bottom: 8px; color: var(--primary-light); }
-        .grid-btn-pill { width: 100%; background: var(--primary); color: #fff; border-radius: 25px; font-size: 14px; font-weight: bold; padding: 8px 0; text-align: center; box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.2); }
-        .plus-shortcut-btn { position: absolute; left: -5px; top: 35%; width: 32px; height: 32px; background: var(--primary-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border: 2px solid #fff; }
-
-        .accordion-header { background: var(--primary); color: #fff; padding: 16px 20px; font-size: 16px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 2px; }
-        .accordion-header i { font-size: 14px; transition: transform 0.2s; }
-        .accordion-body { display: none; background: #fff; padding: 0; border-bottom: 1px solid var(--border); }
-        .accordion-body.open { display: block; }
-        .accordion-item { padding: 16px 20px; font-size: 15px; color: var(--text-dark); border-bottom: 1px solid #f1f5f9; cursor: pointer; }
-        .accordion-item:hover { background: #f8fafc; }
-        .accordion-item:last-child { border-bottom: none; }
-
-        .main-bottom-bar { background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom)); font-size: 16px; font-weight: bold; z-index: 98; }
-        .youtube-btn { background: #fff; color: var(--primary); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
-        .bottom-icon-btn { background: transparent; border: 2px solid #fff; border-radius: 50%; color: #fff; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
-
-        /* Modals */
-        .modal-page { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-body); z-index: 100; display: none; flex-direction: column; overflow-y: auto; padding: 20px; padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
-        .modal-page.active { display: flex; }
-        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid var(--primary); }
-        .modal-title { font-size: 18px; font-weight: bold; color: var(--primary); }
-        .close-modal-btn { background: var(--danger); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; }
-
-        .card { background: var(--card-bg); border-radius: 10px; padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .form-group { margin-bottom: 12px; }
-        .form-label { display: block; font-size: 13px; font-weight: bold; color: var(--text-dark); margin-bottom: 6px; }
-        .form-input, .form-select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: #f8fafc; outline: none; }
-        .form-input:focus, .form-select:focus { border-color: var(--primary); background: #fff; }
-        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn-action { width: 100%; padding: 14px; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; color: #fff; background: var(--primary); cursor: pointer; margin-top: 8px; }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
-        .data-table th, .data-table td { padding: 10px 6px; text-align: right; border-bottom: 1px solid var(--border); }
-        .data-table th { background: #f1f5f9; color: var(--text-muted); font-size: 12px; }
-
-        .search-box { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 20px; font-size: 14px; outline: none; background: #fff; }
-        .search-box:focus { border-color: var(--primary); }
-
-        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 99999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-        .toast { padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: bold; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.25); animation: toastIn 0.25s ease; }
-        @keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-        #print-area { display: none; }
-        @media print {
-            body > *:not(#print-area) { display: none !important; }
-            #print-area { display: block !important; padding: 20px; direction: rtl; font-family: 'Segoe UI', Tahoma, sans-serif; color: #000; }
-            #print-area .print-header { text-align: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 15px; }
-            #print-area .print-header h1 { font-size: 22px; margin: 0; }
-            #print-area .print-header p { font-size: 13px; margin: 4px 0 0; color: #333; }
-            #print-area .print-meta { width: 100%; margin: 15px 0; font-size: 13px; border-collapse: collapse; }
-            #print-area .print-meta td { padding: 6px 4px; border-bottom: 1px dotted #999; }
-            #print-area .print-meta td:first-child { font-weight: bold; width: 40%; }
-            #print-area .print-items { width: 100%; border-collapse: collapse; margin: 15px 0; }
-            #print-area .print-items th, #print-area .print-items td { border: 1px solid #000; padding: 8px; font-size: 12px; text-align: right; }
-            #print-area .print-items th { background: #eee; }
-            #print-area .print-total { text-align: left; margin: 15px 0; padding: 10px; font-size: 16px; font-weight: bold; background: #f0f0f0; border: 2px solid #000; }
-            #print-area .print-footer { text-align: center; margin-top: 40px; border-top: 1px dashed #000; padding-top: 10px; font-size: 11px; }
-        }
-    </style>
+    <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 
     <!-- ============ شاشة تسجيل الدخول ============ -->
     <div id="auth-screen">
         <div class="auth-card">
-            <div class="auth-logo"><i class="fas fa-chart-line"></i></div>
+            <div class="auth-logo"><i class="fas fa-calculator"></i></div>
             <div class="auth-title">محاسب المذيوب</div>
-            <div class="auth-subtitle">إعداد المهندس عبدالقادر حسين المذيوب</div>
+            <div class="auth-sub">نظام محاسبي متكامل — إعداد م. عبدالقادر حسين</div>
             <div class="auth-error" id="auth-error"></div>
-            <input type="email" id="auth-email" class="auth-input" placeholder="البريد الإلكتروني" autocomplete="off" required>
-            <input type="password" id="auth-password" class="auth-input" placeholder="كلمة المرور" autocomplete="new-password" required>
+            <input type="email" id="auth-email" class="auth-input" placeholder="البريد الإلكتروني" autocomplete="username">
+            <input type="password" id="auth-password" class="auth-input" placeholder="كلمة المرور" autocomplete="current-password">
             <button class="auth-btn auth-btn-primary" id="btn-login" onclick="handleLogin()">تسجيل الدخول</button>
             <button class="auth-btn auth-btn-secondary" id="btn-signup" onclick="handleSignup()">إنشاء حساب جديد</button>
             <div class="auth-loading" id="auth-loading">جاري التحميل...</div>
@@ -159,1261 +33,180 @@
     </div>
 
     <!-- ============ التطبيق ============ -->
-    <div class="phone-wrapper" id="app-wrapper">
-        <div class="main-header">
-            <div class="header-title-area">
-                <button class="menu-toggle-btn" onclick="toggleDrawer()"><i class="fas fa-bars"></i></button>
-                <span class="app-brand-name">محاسب المذيوب</span>
+    <div id="app">
+        <header class="app-header">
+            <div class="brand"><i class="fas fa-calculator"></i><span id="header-title">الرئيسية</span></div>
+            <div class="header-actions">
+                <button class="hicon" onclick="showView('reports')" title="التقارير"><i class="fas fa-chart-pie"></i></button>
+                <button class="hicon" onclick="toggleDrawer(true)" title="القائمة"><i class="fas fa-bars"></i></button>
             </div>
-            <div class="header-icons-area">
-                <i class="fas fa-bell header-icon" onclick="showToast('لا توجد إشعارات جديدة','info')"></i>
-                <i class="fas fa-share-alt header-icon" onclick="showToast('شارك التطبيق','info')"></i>
-            </div>
+        </header>
+
+        <!-- Drawer -->
+        <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer(false)">
+            <aside class="drawer" onclick="event.stopPropagation()">
+                <div class="drawer-head">
+                    <div class="d-title">محاسب المذيوب</div>
+                    <div class="d-sub" id="drawer-user-email">—</div>
+                </div>
+                <div class="drawer-body" id="drawer-list">
+                    <button class="d-item" onclick="go('expenses')"><i class="fas fa-file-invoice-dollar"></i>المصروفات</button>
+                    <button class="d-item" onclick="go('customers')"><i class="fas fa-users"></i>العملاء</button>
+                    <button class="d-item" onclick="go('suppliers')"><i class="fas fa-truck"></i>الموردون</button>
+                    <button class="d-item" onclick="go('accounts')"><i class="fas fa-book"></i>شجرة الحسابات</button>
+                    <button class="d-item" onclick="go('transactions')"><i class="fas fa-list-alt"></i>سجل العمليات</button>
+                    <div class="d-sep"></div>
+                    <button class="d-item" id="admin-menu-item" style="display:none" onclick="go('admin')"><i class="fas fa-user-shield"></i>إدارة المستخدمين</button>
+                    <button class="d-item" onclick="exportBackup()"><i class="fas fa-download"></i>نسخة احتياطية</button>
+                    <button class="d-item" onclick="document.getElementById('restore-input').click()"><i class="fas fa-upload"></i>استعادة نسخة</button>
+                    <input type="file" id="restore-input" accept=".json" style="display:none" onchange="importBackup(event)">
+                    <div class="d-sep"></div>
+                    <button class="d-item" onclick="openRatesModal()"><i class="fas fa-money-bill-wave"></i>أسعار الصرف</button>
+                    <button class="d-item" onclick="clearCache()"><i class="fas fa-broom"></i>تحديث التطبيق</button>
+                    <button class="d-item danger" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i>تسجيل الخروج</button>
+                </div>
+            </aside>
         </div>
 
-        <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()">
-            <div class="drawer-menu" onclick="event.stopPropagation()">
-                <div class="drawer-header">
-                    <div class="drawer-logo-icon"><i class="fas fa-chart-pie"></i></div>
-                    <div class="drawer-title-container">
-                        <div class="drawer-title">محاسب المذيوب</div>
-                        <div class="drawer-subtitle">إعداد م. عبدالقادر حسين</div>
-                    </div>
-                </div>
-                <div class="drawer-list">
-                    <div class="drawer-item" id="adminMenuItem" style="display:none; background:#e0f2fe;" onclick="openModal('modal-admin-users')">
-                        <i class="fas fa-users-cog drawer-icon" style="color:#0284c7;"></i><span style="color:#0284c7;">إدارة المستخدمين</span>
-                    </div>
-                    
-                    <div class="drawer-item" onclick="backupDatabase()">
-                        <i class="fas fa-file-download drawer-icon"></i><span>حفظ نسخة إحتياطية</span>
-                    </div>
-                    <div class="drawer-item" onclick="triggerRestoreInput()">
-                        <i class="fas fa-database drawer-icon"></i><span>إسترجاع قاعدة البيانات</span>
-                    </div>
-                    <input type="file" id="restoreFileInput" style="display:none" onchange="restoreDatabase(event)" accept=".json">
-                    <div class="drawer-item" onclick="showToast('سيتم تفعيل جوجل درايف قريباً','info')">
-                        <i class="fab fa-google-drive drawer-icon"></i><span>جوجل درايف</span>
-                    </div>
-                    <div class="drawer-item" onclick="openModal('modal-accounts')">
-                        <i class="fas fa-list-ul drawer-icon"></i><span>دليل الحسابات</span>
-                    </div>
-                    <div class="drawer-item" onclick="openModal('modal-currencies')">
-                        <i class="fas fa-cogs drawer-icon"></i><span>إعدادات</span>
-                    </div>
-                    
-                    <!-- زر مسح الكاش الذي كان مفقوداً -->
-                    <div class="drawer-item" onclick="clearAllCaches()">
-                        <i class="fas fa-broom drawer-icon" style="color:var(--warning)"></i><span style="color:var(--warning)">مسح الكاش (تحديث الواجهة)</span>
-                    </div>
-
-                    <div class="drawer-item" onclick="showToast('📞 للتواصل: عبدالقادر المذيوب','info')">
-                        <i class="fas fa-phone-alt drawer-icon"></i><span>للتواصل والدعم</span>
-                    </div>
-                    <div class="drawer-item" onclick="showToast('محاسب المذيوب v8.0 — نظام محاسبي متكامل','info')">
-                        <i class="fas fa-info-circle drawer-icon"></i><span>حول البرنامج</span>
-                    </div>
-                    <div class="drawer-item" onclick="handleLogout()">
-                        <i class="fas fa-sign-out-alt drawer-icon" style="color:var(--danger);"></i><span style="color:var(--danger);">خروج</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="app-viewport">
-            <div class="main-top-grid">
-                <div class="grid-btn-wrapper">
-                    <div class="grid-btn" onclick="openModal('modal-vouchers')">
-                        <i class="fas fa-receipt grid-btn-icon"></i>
-                        <div class="grid-btn-pill">قبض/صرف</div>
-                    </div>
-                </div>
-                <div class="grid-btn-wrapper">
-                    <div class="grid-btn" onclick="openModal('modal-sales-list')">
-                        <i class="fas fa-shopping-cart grid-btn-icon"></i>
-                        <div class="grid-btn-pill">المبيعات</div>
-                    </div>
-                    <div class="plus-shortcut-btn" onclick="openModal('modal-sales')"><i class="fas fa-plus"></i></div>
-                </div>
-                <div class="grid-btn-wrapper">
-                    <div class="grid-btn" onclick="openModal('modal-accounts')">
-                        <i class="fas fa-folder-open grid-btn-icon"></i>
-                        <div class="grid-btn-pill">الحسابات</div>
-                    </div>
-                </div>
-                <div class="grid-btn-wrapper">
-                    <div class="grid-btn" onclick="openModal('modal-purchases-list')">
-                        <i class="fas fa-cart-arrow-down grid-btn-icon"></i>
-                        <div class="grid-btn-pill">المشتريات</div>
-                    </div>
-                    <div class="plus-shortcut-btn" onclick="openModal('modal-purchases')"><i class="fas fa-plus"></i></div>
-                </div>
-            </div>
-
-            <div class="accordion-section">
-                <div class="accordion-header" onclick="toggleAccordion('acc-inventory')">
-                    <span>عمليات مخزنية</span>
-                    <i class="fas fa-chevron-down" id="arrow-acc-inventory"></i>
-                </div>
-                <div class="accordion-body" id="acc-inventory">
-                    <div class="accordion-item" onclick="showToast('شاشة الصرف المخزني','info')">صرف مخزني</div>
-                    <div class="accordion-item" onclick="showToast('شاشة التوريد المخزني','info')">توريد مخزني</div>
-                    <div class="accordion-item" onclick="showToast('شاشة التحويل المخزني','info')">تحويل مخزني</div>
-                    <div class="accordion-item" onclick="openModal('modal-items')">جرد مخزني</div>
-                </div>
-
-                <div class="accordion-header" onclick="toggleAccordion('acc-journal')">
-                    <span>قيود وحسابات</span>
-                    <i class="fas fa-chevron-down" id="arrow-acc-journal"></i>
-                </div>
-                <div class="accordion-body" id="acc-journal">
-                    <div class="accordion-item" onclick="openModal('modal-journal-entry')">قيد يومي</div>
-                    <div class="accordion-item" onclick="openModal('modal-transactions')">حركة الصندوق</div>
-                    <div class="accordion-item" onclick="openModal('modal-accounts')">دليل الحسابات</div>
-                </div>
-
-                <div class="accordion-header" onclick="toggleAccordion('acc-items')">
-                    <span>أصناف</span>
-                    <i class="fas fa-chevron-down" id="arrow-acc-items"></i>
-                </div>
-                <div class="accordion-body" id="acc-items">
-                    <div class="accordion-item" onclick="openModal('modal-items')">الأصناف</div>
-                </div>
-
-                <div class="accordion-header" onclick="toggleAccordion('acc-reports')">
-                    <span>التقارير</span>
-                    <i class="fas fa-chevron-down" id="arrow-acc-reports"></i>
-                </div>
-                <div class="accordion-body" id="acc-reports">
-                    <div class="accordion-item" onclick="openModal('modal-reports')">قائمة الدخل</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="main-bottom-bar">
-            <div class="youtube-btn" onclick="showToast('قناة يوتيوب','info')"><i class="fab fa-youtube"></i></div>
-            <span>المخزن الرئيسي</span>
-            <button class="bottom-icon-btn" onclick="renderAll(); showToast('تم تحديث البيانات','success')"><i class="fas fa-sync-alt"></i></button>
-        </div>
-
-        <!-- ============ MODALS ============ -->
-        
-        <div class="modal-page" id="modal-admin-users">
-            <div class="modal-header"><span class="modal-title">👥 إدارة المستخدمين (المدير)</span><button class="close-modal-btn" onclick="closeModal('modal-admin-users')">إغلاق ✕</button></div>
-            <div class="card">
-                <p style="font-size:12px; color:#64748b; margin-bottom:10px;">هذه القائمة تعرض جميع الإيميلات التي سجلت في التطبيق.</p>
-                <div id="admin-users-list">
-                    <p style="text-align:center;">جاري التحميل...</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal-page" id="modal-sales-list">
-            <div class="modal-header"><span class="modal-title">🛒 سجل فواتير المبيعات</span><button class="close-modal-btn" onclick="closeModal('modal-sales-list')">إغلاق ✕</button></div>
-            <button class="btn-action" style="background:var(--success); margin-bottom:12px;" onclick="openModal('modal-sales')">➕ إنشاء فاتورة مبيعات جديدة</button>
-            <div class="card" style="max-height:400px; overflow-y:auto;"><div id="sales-list-tbody"></div></div>
-        </div>
-
-        <div class="modal-page" id="modal-purchases-list">
-            <div class="modal-header"><span class="modal-title">📦 سجل فواتير المشتريات</span><button class="close-modal-btn" onclick="closeModal('modal-purchases-list')">إغلاق ✕</button></div>
-            <button class="btn-action" style="background:var(--warning); margin-bottom:12px;" onclick="openModal('modal-purchases')">➕ إنشاء فاتورة مشتريات جديدة</button>
-            <div class="card" style="max-height:400px; overflow-y:auto;"><div id="purchases-list-tbody"></div></div>
-        </div>
-
-        <div class="modal-page" id="modal-sales">
-            <div class="modal-header"><span class="modal-title">🛒 فاتورة مبيعات</span><button class="close-modal-btn" onclick="closeModal('modal-sales')">إغلاق ✕</button></div>
-            <form onsubmit="handleSalesSubmit(event)">
+        <!-- الصفحات -->
+        <main class="pages">
+            <!-- الرئيسية -->
+            <section class="view active" id="view-home">
+                <div class="view-title">لوحة التحكم</div>
+                <div class="view-sub" id="home-date"></div>
+                <div id="home-alerts"></div>
+                <div class="stats-grid" id="home-stats"></div>
                 <div class="card">
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">نوع الدفع</label><select class="form-select" id="sales-pay-type"><option value="CASH">نقداً</option><option value="CREDIT">آجل</option></select></div>
-                        <div class="form-group">
-                            <label class="form-label">العميل (اكتب أو اختر)</label>
-                            <input type="text" class="form-input" id="sales-customer" list="customers-list" placeholder="اسم العميل..." required>
-                            <datalist id="customers-list"></datalist>
-                        </div>
+                    <div class="card-title"><i class="fas fa-bolt"></i>إجراءات سريعة</div>
+                    <div class="form-grid">
+                        <button class="btn btn-success" onclick="openInvoiceForm('sale')"><i class="fas fa-plus"></i>فاتورة مبيعات</button>
+                        <button class="btn btn-warning" onclick="openInvoiceForm('purch')"><i class="fas fa-plus"></i>فاتورة مشتريات</button>
+                        <button class="btn btn-primary" onclick="openVoucherForm()"><i class="fas fa-receipt"></i>سند قبض/صرف</button>
+                        <button class="btn btn-ghost" onclick="openExpenseForm()"><i class="fas fa-minus-circle"></i>مصروف</button>
+                        <button class="btn btn-ghost" onclick="openJournalForm()"><i class="fas fa-pen"></i>قيد يومية</button>
+                        <button class="btn btn-ghost" onclick="openItemForm()"><i class="fas fa-box"></i>صنف جديد</button>
                     </div>
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">الصنف</label><select class="form-select" id="sales-item-select" onchange="calcSales()"></select></div>
-                        <div class="form-group"><label class="form-label">الكمية</label><input type="number" value="1" min="1" class="form-input" id="sales-qty" oninput="calcSales()"></div>
-                    </div>
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">العملة</label><select class="form-select" id="sales-curr" onchange="calcSales()"><option value="USD">دولار ($)</option><option value="YER">ريال يمني (ر.ي)</option><option value="SAR">ريال سعودي (ر.س)</option></select></div>
-                        <div class="form-group"><label class="form-label">الإجمالي</label><input type="text" class="form-input" id="sales-amt-display" readonly></div>
-                    </div>
-                    <button type="submit" class="btn-action" style="background:var(--success);">💾 حفظ الفاتورة</button>
                 </div>
-            </form>
-        </div>
-
-        <div class="modal-page" id="modal-purchases">
-            <div class="modal-header"><span class="modal-title">📦 فاتورة مشتريات</span><button class="close-modal-btn" onclick="closeModal('modal-purchases')">إغلاق ✕</button></div>
-            <form onsubmit="handlePurchSubmit(event)">
                 <div class="card">
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">نوع الشراء</label><select class="form-select" id="purch-pay-type"><option value="CASH">نقداً</option><option value="CREDIT">آجل</option></select></div>
-                        <div class="form-group">
-                            <label class="form-label">المورد (اكتب أو اختر)</label>
-                            <input type="text" class="form-input" id="purch-supplier" list="suppliers-list" placeholder="اسم المورد..." required>
-                            <datalist id="suppliers-list"></datalist>
-                        </div>
-                    </div>
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">الصنف</label><select class="form-select" id="purch-item-select" onchange="calcPurch()"></select></div>
-                        <div class="form-group"><label class="form-label">الكمية</label><input type="number" value="1" min="1" class="form-input" id="purch-qty" oninput="calcPurch()"></div>
-                    </div>
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">العملة</label><select class="form-select" id="purch-curr" onchange="calcPurch()"><option value="USD">دولار ($)</option><option value="YER">ريال يمني (ر.ي)</option><option value="SAR">ريال سعودي (ر.س)</option></select></div>
-                        <div class="form-group"><label class="form-label">الإجمالي</label><input type="text" class="form-input" id="purch-amt-display" readonly></div>
-                    </div>
-                    <button type="submit" class="btn-action" style="background:var(--warning);">💾 حفظ الفاتورة</button>
+                    <div class="card-title"><i class="fas fa-clock"></i>آخر العمليات</div>
+                    <div id="home-recent"></div>
                 </div>
-            </form>
-        </div>
+            </section>
 
-        <div class="modal-page" id="modal-vouchers">
-            <div class="modal-header"><span class="modal-title">🧾 سندات القبض والصرف</span><button class="close-modal-btn" onclick="closeModal('modal-vouchers')">إغلاق ✕</button></div>
-            <form onsubmit="handleVoucherSubmit(event)">
-                <div class="card">
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">نوع السند</label><select class="form-select" id="v-type"><option value="RECEIPT">سند قبض (+)</option><option value="PAYMENT">سند صرف (-)</option></select></div>
-                        <div class="form-group"><label class="form-label">المبلغ</label><div style="display:flex; gap:4px;"><input type="number" step="0.01" min="0.01" class="form-input" id="v-amt" required><select class="form-select" id="v-curr" style="width:80px;"><option value="USD">$</option><option value="YER">ر.ي</option><option value="SAR">ر.س</option></select></div></div>
-                    </div>
-                    <div class="form-group"><label class="form-label">الجهة / الحساب</label><input type="text" class="form-input" id="v-party" required></div>
-                    <div class="form-group"><label class="form-label">الحساب المحاسبي</label><select class="form-select" id="v-acc"></select></div>
-                    <div class="form-group"><label class="form-label">البيان</label><input type="text" class="form-input" id="v-notes" required></div>
-                    <button type="submit" class="btn-action">💾 حفظ السند</button>
+            <!-- المبيعات -->
+            <section class="view" id="view-sales">
+                <div class="view-title">فواتير المبيعات</div>
+                <div class="view-sub">إنشاء وعرض فواتير البيع</div>
+                <input type="text" class="search-box" id="sales-search" placeholder="🔍 بحث برقم الفاتورة أو العميل..." oninput="renderSales()">
+                <button class="btn btn-success btn-block" style="margin-bottom:14px" onclick="openInvoiceForm('sale')"><i class="fas fa-plus"></i>فاتورة مبيعات جديدة</button>
+                <div class="card"><div id="sales-list"></div></div>
+            </section>
+
+            <!-- المشتريات -->
+            <section class="view" id="view-purchases">
+                <div class="view-title">فواتير المشتريات</div>
+                <div class="view-sub">إنشاء وعرض فواتير الشراء</div>
+                <input type="text" class="search-box" id="purch-search" placeholder="🔍 بحث برقم الفاتورة أو المورد..." oninput="renderPurchases()">
+                <button class="btn btn-warning btn-block" style="margin-bottom:14px" onclick="openInvoiceForm('purch')"><i class="fas fa-plus"></i>فاتورة مشتريات جديدة</button>
+                <div class="card"><div id="purch-list"></div></div>
+            </section>
+
+            <!-- المخزون -->
+            <section class="view" id="view-inventory">
+                <div class="view-title">المخزون والأصناف</div>
+                <div class="view-sub">أرصدة الأصناف وتنبيهات النواقص</div>
+                <input type="text" class="search-box" id="items-search" placeholder="🔍 بحث بالاسم أو الباركود..." oninput="renderItems()">
+                <button class="btn btn-primary btn-block" style="margin-bottom:14px" onclick="openItemForm()"><i class="fas fa-plus"></i>صنف جديد</button>
+                <div id="items-alerts"></div>
+                <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>الصنف</th><th>الباركود</th><th>الكمية</th><th>سعر البيع</th><th>التكلفة</th><th></th></tr></thead><tbody id="items-tbody"></tbody></table></div></div>
+            </section>
+
+            <!-- الحسابات -->
+            <section class="view" id="view-accounts">
+                <div class="view-title">الحسابات والسندات</div>
+                <div class="view-sub">شجرة الحسابات وأرصدتها</div>
+                <div class="form-grid" style="margin-bottom:14px">
+                    <button class="btn btn-primary" onclick="openVoucherForm()"><i class="fas fa-receipt"></i>سند قبض/صرف</button>
+                    <button class="btn btn-soft" onclick="openJournalForm()"><i class="fas fa-pen"></i>قيد يومية</button>
+                    <button class="btn btn-ghost" onclick="openTransferForm()"><i class="fas fa-exchange-alt"></i>تحويل</button>
+                    <button class="btn btn-ghost" onclick="openAccountForm()"><i class="fas fa-folder-plus"></i>حساب جديد</button>
                 </div>
-            </form>
-        </div>
+                <div class="card"><div class="card-title"><i class="fas fa-book"></i>دليل الحسابات والأرصدة</div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>الكود</th><th>الحساب</th><th>النوع</th><th>الرصيد ($)</th></tr></thead><tbody id="accounts-tbody"></tbody></table></div></div>
+                <div class="card"><div class="card-title"><i class="fas fa-list"></i>سندات وقيود أخيرة</div><div id="accounts-docs"></div></div>
+            </section>
 
-        <div class="modal-page" id="modal-items">
-            <div class="modal-header"><span class="modal-title">🏷️ دليل الأصناف</span><button class="close-modal-btn" onclick="closeModal('modal-items')">إغلاق ✕</button></div>
-            <form onsubmit="handleItemSubmit(event)">
-                <div class="card">
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">اسم الصنف</label><input type="text" class="form-input" id="item-name" required></div>
-                        <div class="form-group"><label class="form-label">الباركود</label><input type="text" class="form-input" id="item-code" required></div>
-                    </div>
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">سعر البيع ($)</label><input type="number" step="0.01" min="0" class="form-input" id="item-price" required></div>
-                        <div class="form-group"><label class="form-label">سعر التكلفة ($)</label><input type="number" step="0.01" min="0" class="form-input" id="item-cost" required></div>
-                    </div>
-                    <div class="form-group"><label class="form-label">الكمية</label><input type="number" min="0" class="form-input" id="item-qty" required></div>
-                    <button type="submit" class="btn-action">💾 حفظ الصنف</button>
-                </div>
-            </form>
-            <div class="card" style="overflow-x:auto;">
-                <input type="text" class="search-box" id="search-items" placeholder="🔍 بحث عن صنف..." oninput="renderItemsList(this.value)">
-                <table class="data-table"><thead><tr><th>الباركود</th><th>الصنف</th><th>الكمية</th><th>بيع</th></tr></thead><tbody id="items-list-tbody"></tbody></table>
-            </div>
-        </div>
+            <!-- التقارير -->
+            <section class="view" id="view-reports">
+                <div class="view-title">التقارير المالية</div>
+                <div class="view-sub">أرباح وخسائر — ميزان مراجعة — أرصدة أطراف</div>
+                <div class="stats-grid" id="rep-stats"></div>
+                <div class="card rep-section"><h4>قائمة الدخل</h4><div id="rep-pnl"></div></div>
+                <div class="card rep-section"><h4>ميزان المراجعة (أرصدة الحسابات)</h4><div class="tbl-wrap"><table class="tbl"><thead><tr><th>الكود</th><th>الحساب</th><th>مدين ($)</th><th>دائن ($)</th></tr></thead><tbody id="rep-tb"></tbody></table></div></div>
+                <div class="card rep-section"><h4>أرصدة العملاء والموردين</h4><div id="rep-parties"></div></div>
+            </section>
 
-        <div class="modal-page" id="modal-accounts">
-            <div class="modal-header"><span class="modal-title">📁 دليل الحسابات والإدارة</span><button class="close-modal-btn" onclick="closeModal('modal-accounts')">إغلاق ✕</button></div>
-            <div class="card" style="padding:10px;">
-                <button class="btn-action" style="background:var(--info); margin-bottom:8px;" onclick="openModal('modal-transfer')">🔄 تحويل بين الحسابات</button>
-                <button class="btn-action" style="background:var(--success); margin-bottom:8px;" onclick="openModal('modal-journal-entry')">📝 إيداع / سحب</button>
-                <button class="btn-action" style="background:var(--warning); margin-bottom:8px;" onclick="openModal('modal-customers')">👥 إدارة العملاء</button>
-                <button class="btn-action" style="background:#475569;" onclick="openModal('modal-suppliers')">🚚 إدارة الموردين</button>
-            </div>
-            <div class="card" style="overflow-x:auto;"><table class="data-table"><thead><tr><th>الكود</th><th>الحساب</th><th>التصنيف</th><th>الرصيد ($)</th></tr></thead><tbody id="accounts-list-tbody"></tbody></table></div>
-        </div>
+            <!-- المصروفات -->
+            <section class="view" id="view-expenses">
+                <div class="view-title">المصروفات</div>
+                <div class="view-sub">تسجيل ومتابعة المصروفات</div>
+                <button class="btn btn-danger btn-block" style="margin-bottom:14px" onclick="openExpenseForm()"><i class="fas fa-plus"></i>مصروف جديد</button>
+                <div class="card"><div id="expenses-list"></div></div>
+            </section>
 
-        <div class="modal-page" id="modal-customers">
-            <div class="modal-header"><span class="modal-title">👥 إدارة العملاء</span><button class="close-modal-btn" onclick="closeModal('modal-customers')">إغلاق ✕</button></div>
-            <form onsubmit="handleCustomerSubmit(event)">
-                <div class="card">
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">اسم العميل</label><input type="text" class="form-input" id="cust-name" required></div>
-                        <div class="form-group"><label class="form-label">رقم الهاتف (اختياري)</label><input type="text" class="form-input" id="cust-phone"></div>
-                    </div>
-                    <button type="submit" class="btn-action" style="background:var(--warning);">💾 حفظ العميل</button>
-                </div>
-            </form>
-            <div class="card" style="overflow-x:auto;">
-                <input type="text" class="search-box" id="search-customers" placeholder="🔍 بحث عن عميل..." oninput="renderCustomersList(this.value)">
-                <table class="data-table"><thead><tr><th>الاسم</th><th>الهاتف</th><th>حذف</th></tr></thead><tbody id="customers-list-tbody"></tbody></table>
-            </div>
-        </div>
+            <!-- العملاء -->
+            <section class="view" id="view-customers">
+                <div class="view-title">العملاء</div>
+                <div class="view-sub">أرصدة وبيانات العملاء</div>
+                <button class="btn btn-primary btn-block" style="margin-bottom:14px" onclick="openPartyForm('customer')"><i class="fas fa-plus"></i>عميل جديد</button>
+                <div class="card"><div id="customers-list"></div></div>
+            </section>
 
-        <div class="modal-page" id="modal-suppliers">
-            <div class="modal-header"><span class="modal-title">🚚 إدارة الموردين</span><button class="close-modal-btn" onclick="closeModal('modal-suppliers')">إغلاق ✕</button></div>
-            <form onsubmit="handleSupplierSubmit(event)">
-                <div class="card">
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">اسم المورد</label><input type="text" class="form-input" id="sup-name" required></div>
-                        <div class="form-group"><label class="form-label">رقم الهاتف (اختياري)</label><input type="text" class="form-input" id="sup-phone"></div>
-                    </div>
-                    <button type="submit" class="btn-action" style="background:#475569;">💾 حفظ المورد</button>
-                </div>
-            </form>
-            <div class="card" style="overflow-x:auto;">
-                <input type="text" class="search-box" id="search-suppliers" placeholder="🔍 بحث عن مورد..." oninput="renderSuppliersList(this.value)">
-                <table class="data-table"><thead><tr><th>الاسم</th><th>الهاتف</th><th>حذف</th></tr></thead><tbody id="suppliers-list-tbody"></tbody></table>
-            </div>
-        </div>
+            <!-- الموردون -->
+            <section class="view" id="view-suppliers">
+                <div class="view-title">الموردون</div>
+                <div class="view-sub">أرصدة وبيانات الموردين</div>
+                <button class="btn btn-primary btn-block" style="margin-bottom:14px" onclick="openPartyForm('supplier')"><i class="fas fa-plus"></i>مورد جديد</button>
+                <div class="card"><div id="suppliers-list"></div></div>
+            </section>
 
-        <div class="modal-page" id="modal-transfer">
-            <div class="modal-header"><span class="modal-title">🔄 تحويل بين الحسابات</span><button class="close-modal-btn" onclick="closeModal('modal-transfer')">إغلاق ✕</button></div>
-            <form onsubmit="handleTransferSubmit(event)">
-                <div class="card">
-                    <div class="form-group"><label class="form-label">من حساب</label><select class="form-select" id="tr-from" required></select></div>
-                    <div class="form-group"><label class="form-label">إلى حساب</label><select class="form-select" id="tr-to" required></select></div>
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">المبلغ</label><input type="number" step="0.01" min="0.01" class="form-input" id="tr-amt" required></div>
-                        <div class="form-group"><label class="form-label">العملة</label><select class="form-select" id="tr-curr"><option value="USD">$</option><option value="YER">ر.ي</option><option value="SAR">ر.س</option></select></div>
-                    </div>
-                    <div class="form-group"><label class="form-label">البيان</label><input type="text" class="form-input" id="tr-notes" required></div>
-                    <button type="submit" class="btn-action" style="background:var(--info);">💾 حفظ التحويل</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="modal-page" id="modal-journal-entry">
-            <div class="modal-header"><span class="modal-title">📝 إيداع / سحب</span><button class="close-modal-btn" onclick="closeModal('modal-journal-entry')">إغلاق ✕</button></div>
-            <form onsubmit="handleJournalSubmit(event)">
-                <div class="card">
-                    <div class="form-group"><label class="form-label">الحساب</label><select class="form-select" id="je-acc" required></select></div>
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">نوع العملية</label><select class="form-select" id="je-type"><option value="DEPOSIT">إيداع (+)</option><option value="WITHDRAW">سحب (-)</option></select></div>
-                        <div class="form-group"><label class="form-label">المبلغ</label><input type="number" step="0.01" min="0.01" class="form-input" id="je-amt" required></div>
-                    </div>
-                    <div class="row-2">
-                        <div class="form-group"><label class="form-label">العملة</label><select class="form-select" id="je-curr"><option value="USD">$</option><option value="YER">ر.ي</option><option value="SAR">ر.س</option></select></div>
-                    </div>
-                    <div class="form-group"><label class="form-label">البيان</label><input type="text" class="form-input" id="je-notes" required></div>
-                    <button type="submit" class="btn-action" style="background:var(--success);">💾 حفظ القيد</button>
-                </div>
-            </form>
-        </div>
-
-        <div class="modal-page" id="modal-currencies">
-            <div class="modal-header"><span class="modal-title">💱 أسعار الصرف</span><button class="close-modal-btn" onclick="closeModal('modal-currencies')">إغلاق ✕</button></div>
-            <div class="card">
-                <div class="form-group"><label class="form-label">الريال اليمني (YER / $1)</label><input type="number" step="0.01" min="1" class="form-input" id="rate-yer" onchange="updateRates()"></div>
-                <div class="form-group"><label class="form-label">الريال السعودي (SAR / $1)</label><input type="number" step="0.01" min="0.1" class="form-input" id="rate-sar" onchange="updateRates()"></div>
-                <button class="btn-action" onclick="updateRates()">💾 حفظ الأسعار</button>
-            </div>
-        </div>
-
-        <div class="modal-page" id="modal-reports">
-            <div class="modal-header"><span class="modal-title">📊 التقارير المالية</span><button class="close-modal-btn" onclick="closeModal('modal-reports')">إغلاق ✕</button></div>
-            <div class="card">
-                <div style="font-size:14px; line-height:2.2;">
-                    <div>إجمالي المبيعات: <strong id="rep-s" style="color:var(--success);">$0.00</strong></div>
-                    <div>إجمالي المشتريات: <strong id="rep-p" style="color:var(--warning);">$0.00</strong></div>
-                    <div>تكلفة المبيعات: <strong id="rep-cogs" style="color:var(--danger);">$0.00</strong></div>
-                    <hr style="margin:6px 0; border:0; border-top:1px solid var(--border);">
-                    <div>📈 الربح الإجمالي: <strong id="rep-gp" style="color:var(--primary);">$0.00</strong></div>
-                    <div>💵 صافي التدفق النقدي: <strong id="rep-cash" style="color:var(--info);">$0.00</strong></div>
-                </div>
-            </div>
-            <div class="card" style="overflow-x:auto;">
-                <div style="font-weight:bold; margin-bottom:8px; color:var(--primary);">أرصدة الحسابات (ميزان المراجعة)</div>
-                <table class="data-table"><thead><tr><th>الكود</th><th>الحساب</th><th>الرصيد ($)</th></tr></thead><tbody id="rep-acc-balances"></tbody></table>
-            </div>
-            <div class="card" style="overflow-x:auto;">
-                <div style="font-weight:bold; margin-bottom:8px; color:var(--primary);">أرصدة العملاء والموردين (آجل)</div>
-                <table class="data-table"><thead><tr><th>الاسم</th><th>النوع</th><th>الرصيد ($)</th></tr></thead><tbody id="rep-party-balances"></tbody></table>
-            </div>
-        </div>
-
-        <div class="modal-page" id="modal-transactions">
-            <div class="modal-header"><span class="modal-title">📑 سجل العمليات</span><button class="close-modal-btn" onclick="closeModal('modal-transactions')">إغلاق ✕</button></div>
-            <div class="card">
-                <select class="form-select" id="tx-filter" onchange="renderTransactions()" style="margin-bottom:8px;">
-                    <option value="ALL">كل العمليات</option><option value="SALES">مبيعات</option><option value="PURCH">مشتريات</option><option value="VOUCHER">سندات</option><option value="TRANSFER">تحويلات</option><option value="JOURNAL">قيود</option>
+            <!-- سجل العمليات -->
+            <section class="view" id="view-transactions">
+                <div class="view-title">سجل العمليات</div>
+                <div class="view-sub">كل الحركات المالية في مكان واحد</div>
+                <select class="fselect" id="tx-filter" onchange="renderTransactions()" style="margin-bottom:10px">
+                    <option value="ALL">كل العمليات</option>
+                    <option value="SALES">مبيعات</option><option value="PURCH">مشتريات</option>
+                    <option value="EXPENSE">مصروفات</option><option value="VOUCHER">سندات</option>
+                    <option value="TRANSFER">تحويلات</option><option value="JOURNAL">قيود</option>
+                    <option value="PAYMENT">دفعات أطراف</option>
                 </select>
-                <input type="text" class="form-input" id="tx-search" placeholder="بحث..." oninput="renderTransactions()">
-            </div>
-            <div class="card" style="max-height:400px; overflow-y:auto;"><div id="tx-list"></div></div>
-        </div>
+                <input type="text" class="search-box" id="tx-search" placeholder="🔍 بحث..." oninput="renderTransactions()">
+                <div class="card"><div id="tx-list"></div></div>
+            </section>
 
+            <!-- الإدارة -->
+            <section class="view" id="view-admin">
+                <div class="view-title">إدارة المستخدمين</div>
+                <div class="view-sub">المستخدمون المسجلون في النظام</div>
+                <div class="card"><div id="admin-users-list"><p class="empty-state">جاري التحميل...</p></div></div>
+            </section>
+        </main>
+
+        <!-- شريط التنقل السفلي -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-view="home" onclick="showView('home')"><i class="fas fa-home"></i>الرئيسية<span class="nav-dot"></span></button>
+            <button class="nav-item" data-view="sales" onclick="showView('sales')"><i class="fas fa-shopping-cart"></i>المبيعات<span class="nav-dot"></span></button>
+            <button class="nav-item" data-view="purchases" onclick="showView('purchases')"><i class="fas fa-cart-arrow-down"></i>المشتريات<span class="nav-dot"></span></button>
+            <button class="nav-item" data-view="inventory" onclick="showView('inventory')"><i class="fas fa-warehouse"></i>المخزون<span class="nav-dot"></span></button>
+            <button class="nav-item" data-view="reports" onclick="showView('reports')"><i class="fas fa-chart-pie"></i>التقارير<span class="nav-dot"></span></button>
+        </nav>
     </div>
 
+    <!-- حاوية النوافذ المنبثقة (تُبنى ديناميكياً) -->
+    <div id="modal-root"></div>
     <div id="print-area"></div>
+    <div id="toast-wrap"></div>
 
-    <script type="module">
-        // ============================================================
-        // 1. Firebase Setup
-        // ============================================================
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, initializeFirestore, persistentLocalCache, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBRFXVq_GU3OMOHTp8SMo1KRKFW0o-TowU",
-            authDomain: "almadhyoub-app.firebaseapp.com",
-            projectId: "almadhyoub-app",
-            storageBucket: "almadhyoub-app.firebasestorage.app",
-            messagingSenderId: "440549958032",
-            appId: "1:440549958032:web:7b50055281601ab5461315"
-        };
-
-        const ADMIN_EMAIL = "abdalgaderalmathoup@gmail.com";
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = initializeFirestore(app, { localCache: persistentLocalCache() });
-
-        let currentUser = null;
-
-        // ============================================================
-        // 2. Helpers & History
-        // ============================================================
-        function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-        function fmt(n) { const v = Number(n); return isFinite(v) ? v.toFixed(2) : '0.00'; }
-        function showToast(msg, type = 'info') {
-            let c = document.getElementById('toast-container');
-            if (!c) { c = document.createElement('div'); c.id = 'toast-container'; document.body.appendChild(c); }
-            const colors = { success: '#10b981', error: '#ef4444', info: '#3b82f6', warning: '#f59e0b' };
-            const t = document.createElement('div'); t.className = 'toast'; t.style.background = colors[type] || colors.info; t.textContent = msg;
-            c.appendChild(t); setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; }, 2200); setTimeout(() => t.remove(), 2600);
-        }
-        function loadSafe(key, fallback) {
-            try { const v = localStorage.getItem(key); if (!v) return fallback; const p = JSON.parse(v); return p == null ? fallback : p; } catch (e) { return fallback; }
-        }
-
-        window.addEventListener('popstate', (event) => {
-            const drawer = document.getElementById('drawerOverlay');
-            if (drawer.classList.contains('active')) { drawer.classList.remove('active'); return; }
-            const activeModal = document.querySelector('.modal-page.active');
-            if (activeModal) { activeModal.classList.remove('active'); return; }
-        });
-
-        // ============================================================
-        // 3. Auth Logic
-        // ============================================================
-        const authScreen = document.getElementById('auth-screen');
-        const appWrapper = document.getElementById('app-wrapper');
-        const authError = document.getElementById('auth-error');
-        const authLoading = document.getElementById('auth-loading');
-
-        function showAuthError(msg) {
-            authError.textContent = msg;
-            authError.style.display = 'block';
-            setTimeout(() => authError.style.display = 'none', 5000);
-        }
-
-        async function handleLogin() {
-            const email = document.getElementById('auth-email').value.trim();
-            const pass = document.getElementById('auth-password').value;
-            if (!email || !pass) return showAuthError('الرجاء إدخال البريد وكلمة المرور');
-            
-            authLoading.style.display = 'block';
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-            } catch (err) {
-                authLoading.style.display = 'none';
-                showAuthError('خطأ: ' + (err.code === 'auth/invalid-credential' ? 'بيانات الدخول غير صحيحة' : err.message));
-            }
-        }
-
-        async function handleSignup() {
-            const email = document.getElementById('auth-email').value.trim();
-            const pass = document.getElementById('auth-password').value;
-            
-            if (!email || !pass) return showAuthError('الرجاء إدخال البريد وكلمة المرور');
-            if (pass.length < 6) return showAuthError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-
-            authLoading.style.display = 'block';
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-                await saveUserToDirectory(userCredential.user);
-                showToast('تم إنشاء الحساب بنجاح!', 'success');
-            } catch (err) {
-                authLoading.style.display = 'none';
-                if (err.code === 'auth/email-already-in-use') showAuthError('هذا البريد مسجل مسبقاً، جرب تسجيل الدخول');
-                else if (err.code === 'auth/invalid-email') showAuthError('البريد الإلكتروني غير صالح');
-                else showAuthError('خطأ: ' + err.message);
-            }
-        }
-
-        async function handleLogout() {
-            if (!confirm('هل تريد تسجيل الخروج؟')) return;
-            await signOut(auth);
-        }
-
-        async function saveUserToDirectory(user) {
-            if (!user) return;
-            try {
-                await setDoc(doc(db, "all_users", user.uid), {
-                    uid: user.uid,
-                    email: user.email,
-                    createdAt: new Date().toISOString()
-                });
-            } catch (e) { console.log("Permission error saving to directory"); }
-        }
-
-        // ============================================================
-        // 4. Data Layer (Firestore)
-        // ============================================================
-        let DB = {
-            rates: loadSafe('alm_rates', { YER: 530, SAR: 3.75 }),
-            counters: { sales: 1000, purch: 1000, voucher: 1000, transfer: 1000, journal: 1000 },
-            accs: [
-                { code: '101', name: 'الصندوق الرئيسي', type: 'الأصول' },
-                { code: '102', name: 'العملاء والمدينون', type: 'الأصول' },
-                { code: '103', name: 'المخزون', type: 'الأصول' },
-                { code: '201', name: 'الموردون والدائنون', type: 'الالتزامات' },
-                { code: '301', name: 'رأس المال', type: 'حقوق الملكية' },
-                { code: '401', name: 'المبيعات', type: 'الإيرادات' },
-                { code: '501', name: 'تكلفة المبيعات', type: 'المصروفات' }
-            ],
-            items: [], sales: [], purch: [], vouchers: [], transfers: [], journal: [], customers: [], suppliers: []
-        };
-
-        let unsubs = [];
-
-        function startListeners(uid) {
-            unsubs.forEach(u => u()); unsubs = [];
-            const collections = ['items', 'sales', 'purch', 'vouchers', 'transfers', 'journal', 'customers', 'suppliers'];
-            
-            collections.forEach(col => {
-                const q = query(collection(db, "users", uid, col));
-                const unsub = onSnapshot(q, (snapshot) => {
-                    DB[col] = [];
-                    snapshot.forEach(doc => DB[col].push(doc.data()));
-                    
-                    if (col !== 'items' && col !== 'customers' && col !== 'suppliers') DB[col].sort((a, b) => b.id - a.id);
-
-                    if (col === 'sales' && DB[col].length > 0) DB.counters.sales = Math.max(...DB[col].map(x => parseInt((x.invNo||'S-1000').split('-')[1]) || 1000));
-                    if (col === 'purch' && DB[col].length > 0) DB.counters.purch = Math.max(...DB[col].map(x => parseInt((x.invNo||'P-1000').split('-')[1]) || 1000));
-                    if (col === 'vouchers' && DB[col].length > 0) DB.counters.voucher = Math.max(...DB[col].map(x => parseInt((x.vouchNo||'V-1000').split('-')[1]) || 1000));
-                    if (col === 'transfers' && DB[col].length > 0) DB.counters.transfer = Math.max(...DB[col].map(x => parseInt((x.trNo||'T-1000').split('-')[1]) || 1000));
-                    if (col === 'journal' && DB[col].length > 0) DB.counters.journal = Math.max(...DB[col].map(x => parseInt((x.jeNo||'J-1000').split('-')[1]) || 1000));
-
-                    renderAll();
-                }, (error) => { console.error(error); });
-                unsubs.push(unsub);
-            });
-        }
-
-        async function saveToCloud(colName, id, data) {
-            const idx = DB[colName].findIndex(x => String(x.id || x.code) === String(id));
-            if (idx > -1) DB[colName][idx] = data;
-            else DB[colName].push(data);
-            if (colName !== 'items' && colName !== 'customers' && colName !== 'suppliers') DB[colName].sort((a, b) => b.id - a.id);
-            renderAll();
-
-            if (!currentUser) return;
-            try { await setDoc(doc(db, "users", currentUser.uid, colName, String(id)), data); }
-            catch (e) { console.error(e); showToast('تم الحفظ محلياً (بانتظار الاتصال)', 'warning'); }
-        }
-
-        async function deleteFromCloud(colName, id, skipConfirm = false) {
-            if (!skipConfirm && !confirm('هل أنت متأكد من الحذف؟')) return;
-            DB[colName] = DB[colName].filter(x => String(x.id || x.code) !== String(id));
-            renderAll();
-            if (!currentUser) return;
-            try { await deleteDoc(doc(db, "users", currentUser.uid, colName, String(id))); }
-            catch (e) { console.error(e); showToast('فشل الحذف', 'error'); }
-        }
-
-        // ============================================================
-        // 5. App Logic & Modals
-        // ============================================================
-        function toggleDrawer(forceClose = false) {
-            const drawer = document.getElementById('drawerOverlay');
-            if (drawer.classList.contains('active') || forceClose === true) {
-                drawer.classList.remove('active');
-                if (history.state && history.state.type === 'drawer') { history.back(); }
-            } else {
-                drawer.classList.add('active');
-                history.pushState({ type: 'drawer' }, '');
-            }
-        }
-
-        function toggleAccordion(id) { 
-            const el = document.getElementById(id); 
-            const arrow = document.getElementById('arrow-' + id); 
-            const open = el.classList.toggle('open'); 
-            if(open) {
-                arrow.classList.remove('fa-chevron-down');
-                arrow.classList.add('fa-chevron-up');
-            } else {
-                arrow.classList.remove('fa-chevron-up');
-                arrow.classList.add('fa-chevron-down');
-            }
-        }
-        
-        function openModal(id) {
-            document.querySelectorAll('.modal-page').forEach(m => m.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            history.pushState({ type: 'modal', id: id }, '');
-
-            if(id === 'modal-admin-users') loadAdminUsers();
-            if (id === 'modal-sales-list') renderSalesList();
-            if (id === 'modal-purchases-list') renderPurchasesList();
-            if (id === 'modal-transactions') renderTransactions();
-            if (id === 'modal-customers') renderCustomersList('');
-            if (id === 'modal-suppliers') renderSuppliersList('');
-            if (id === 'modal-items') renderItemsList('');
-            if (id === 'modal-accounts' || id === 'modal-transfer' || id === 'modal-journal-entry' || id === 'modal-vouchers') populateAccountSelects();
-            if (id === 'modal-currencies') {
-                document.getElementById('rate-yer').value = DB.rates.YER;
-                document.getElementById('rate-sar').value = DB.rates.SAR;
-            }
-        }
-        
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-            if (history.state && history.state.type === 'modal' && history.state.id === id) { history.back(); }
-        }
-
-        async function clearAllCaches() {
-            if (!confirm('⚠️ سيتم مسح الكاش وإعادة تحميل التطبيق.\n\nبياناتك محفوظة سحابياً ولن تُمسح.\n\nهل تريد المتابعة؟')) return;
-            try {
-                const keys = await caches.keys();
-                await Promise.all(keys.map(k => caches.delete(k)));
-                if ('serviceWorker' in navigator) {
-                    const reg = await navigator.serviceWorker.getRegistration();
-                    if (reg) await reg.unregister();
-                }
-                showToast('تم المسح — جاري إعادة التحميل', 'success');
-                setTimeout(() => location.reload(), 800);
-            } catch (e) { showToast('فشل مسح الكاش', 'error'); }
-        }
-
-        async function loadAdminUsers() {
-            const container = document.getElementById('admin-users-list');
-            container.innerHTML = '<p style="text-align:center;">جاري التحميل...</p>';
-            try {
-                const querySnapshot = await getDocs(collection(db, "all_users"));
-                if (querySnapshot.empty) {
-                    container.innerHTML = '<p style="text-align:center;">لا يوجد مستخدمين مسجلين حتى الآن.</p>';
-                    return;
-                }
-                let html = '<table class="data-table"><thead><tr><th>البريد الإلكتروني</th><th>تاريخ التسجيل</th></tr></thead><tbody>';
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const dateStr = new Date(data.createdAt).toLocaleDateString('ar-EG');
-                    html += `<tr><td>${escapeHtml(data.email)}</td><td>${dateStr}</td></tr>`;
-                });
-                html += '</tbody></table>';
-                container.innerHTML = html;
-            } catch (error) {
-                console.error(error);
-                container.innerHTML = '<p style="text-align:center; color:red;">فشل تحميل المستخدمين. تأكد من تحديث قواعد الأمان في Firebase.</p>';
-            }
-        }
-
-        function populateAccountSelects() {
-            const opts = DB.accs.map(a => `<option value="${a.code}">${a.name} (${a.code})</option>`).join('');
-            ['tr-from', 'tr-to', 'je-acc', 'v-acc'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = opts; });
-        }
-
-        function updateRates() {
-            DB.rates.YER = parseFloat(document.getElementById('rate-yer').value) || 530;
-            DB.rates.SAR = parseFloat(document.getElementById('rate-sar').value) || 3.75;
-            localStorage.setItem('alm_rates', JSON.stringify(DB.rates));
-            showToast('تم الحفظ محلياً', 'success');
-        }
-
-        function calcSales() {
-            const idx = parseInt(document.getElementById('sales-item-select').value);
-            const q = parseInt(document.getElementById('sales-qty').value) || 1;
-            const curr = document.getElementById('sales-curr').value;
-            if (!DB.items[idx]) { document.getElementById('sales-amt-display').value = '—'; return; }
-            let val = DB.items[idx].priceUSD * q;
-            if (curr === 'YER') val *= DB.rates.YER;
-            if (curr === 'SAR') val *= DB.rates.SAR;
-            document.getElementById('sales-amt-display').value = val.toFixed(2) + ' ' + curr;
-        }
-
-        function calcPurch() {
-            const idx = parseInt(document.getElementById('purch-item-select').value);
-            const q = parseInt(document.getElementById('purch-qty').value) || 1;
-            const curr = document.getElementById('purch-curr').value;
-            if (!DB.items[idx]) { document.getElementById('purch-amt-display').value = '—'; return; }
-            let val = (DB.items[idx].costUSD || 0) * q;
-            if (curr === 'YER') val *= DB.rates.YER;
-            if (curr === 'SAR') val *= DB.rates.SAR;
-            document.getElementById('purch-amt-display').value = val.toFixed(2) + ' ' + curr;
-        }
-
-        async function handleItemSubmit(e) {
-            e.preventDefault();
-            const priceUSD = parseFloat(document.getElementById('item-price').value);
-            const costUSD = parseFloat(document.getElementById('item-cost').value);
-            const qty = parseInt(document.getElementById('item-qty').value);
-            if (!isFinite(priceUSD) || priceUSD < 0 || !isFinite(costUSD) || costUSD < 0 || !isFinite(qty) || qty < 0) {
-                return showToast('يرجى إدخال قيم صحيحة', 'error');
-            }
-            const item = {
-                code: document.getElementById('item-code').value.trim(),
-                name: document.getElementById('item-name').value.trim(),
-                priceUSD: priceUSD,
-                costUSD: costUSD,
-                qty: qty
-            };
-            if (DB.items.some(x => x.code === item.code)) return showToast('الباركود مستخدم مسبقاً', 'error');
-            await saveToCloud('items', item.code, item);
-            e.target.reset();
-            showToast('تم حفظ الصنف', 'success');
-        }
-
-        async function handleCustomerSubmit(e) {
-            e.preventDefault();
-            const cust = { id: Date.now(), name: document.getElementById('cust-name').value.trim(), phone: document.getElementById('cust-phone').value.trim() };
-            await saveToCloud('customers', cust.id, cust);
-            e.target.reset(); showToast('تم حفظ العميل', 'success');
-        }
-
-        async function handleSupplierSubmit(e) {
-            e.preventDefault();
-            const sup = { id: Date.now(), name: document.getElementById('sup-name').value.trim(), phone: document.getElementById('sup-phone').value.trim() };
-            await saveToCloud('suppliers', sup.id, sup);
-            e.target.reset(); showToast('تم حفظ المورد', 'success');
-        }
-
-        async function handleSalesSubmit(e) {
-            e.preventDefault();
-            const idx = parseInt(document.getElementById('sales-item-select').value);
-            const q = parseInt(document.getElementById('sales-qty').value);
-            const item = DB.items[idx];
-            if (!item) return showToast('اختر صنفاً', 'error');
-            if (!Number.isInteger(q) || q < 1) return showToast('الكمية يجب أن تكون عدداً صحيحاً موجباً', 'error');
-            if (item.qty < q) return showToast('المخزون لا يكفي (المتاح: ' + item.qty + ')', 'error');
-
-            const curr = document.getElementById('sales-curr').value;
-            const amtUSD = item.priceUSD * q;
-            let amtOriginal = amtUSD;
-            if (curr === 'YER') amtOriginal = amtUSD * DB.rates.YER;
-            if (curr === 'SAR') amtOriginal = amtUSD * DB.rates.SAR;
-
-            const updatedItem = { ...item, qty: item.qty - q };
-            await saveToCloud('items', updatedItem.code, updatedItem);
-
-            DB.counters.sales++;
-            const inv = {
-                id: Date.now(), invNo: 'S-' + DB.counters.sales, date: new Date().toISOString(),
-                customer: document.getElementById('sales-customer').value.trim(),
-                itemCode: item.code, itemName: item.name, qty: q,
-                priceUSD: item.priceUSD, costUSD: item.costUSD, amtUSD: amtUSD, curr: curr,
-                display: amtOriginal.toFixed(2) + ' ' + curr,
-                payType: document.getElementById('sales-pay-type').value
-            };
-            await saveToCloud('sales', inv.id, inv);
-            e.target.reset(); closeModal('modal-sales'); openModal('modal-sales-list');
-            showToast('تم حفظ الفاتورة', 'success');
-        }
-
-        async function handlePurchSubmit(e) {
-            e.preventDefault();
-            const idx = parseInt(document.getElementById('purch-item-select').value);
-            const q = parseInt(document.getElementById('purch-qty').value);
-            const item = DB.items[idx];
-            if (!item) return showToast('اختر صنفاً', 'error');
-            if (!Number.isInteger(q) || q < 1) return showToast('الكمية يجب أن تكون عدداً صحيحاً موجباً', 'error');
-
-            const curr = document.getElementById('purch-curr').value;
-            const amtUSD = item.costUSD * q;
-            let amtOriginal = amtUSD;
-            if (curr === 'YER') amtOriginal = amtUSD * DB.rates.YER;
-            if (curr === 'SAR') amtOriginal = amtUSD * DB.rates.SAR;
-
-            const updatedItem = { ...item, qty: item.qty + q };
-            await saveToCloud('items', updatedItem.code, updatedItem);
-
-            DB.counters.purch++;
-            const inv = {
-                id: Date.now(), invNo: 'P-' + DB.counters.purch, date: new Date().toISOString(),
-                supplier: document.getElementById('purch-supplier').value.trim(),
-                itemCode: item.code, itemName: item.name, qty: q,
-                priceUSD: item.costUSD, costUSD: item.costUSD, amtUSD: amtUSD, curr: curr,
-                display: amtOriginal.toFixed(2) + ' ' + curr,
-                payType: document.getElementById('purch-pay-type').value
-            };
-            await saveToCloud('purch', inv.id, inv);
-            e.target.reset(); closeModal('modal-purchases'); openModal('modal-purchases-list');
-            showToast('تم حفظ الفاتورة', 'success');
-        }
-
-        async function handleVoucherSubmit(e) {
-            e.preventDefault();
-            const amtVal = parseFloat(document.getElementById('v-amt').value);
-            if (!isFinite(amtVal) || amtVal <= 0) return showToast('أدخل مبلغاً صحيحاً', 'error');
-            const curr = document.getElementById('v-curr').value;
-            let amtUSD = amtVal;
-            if (curr === 'YER') amtUSD = amtVal / DB.rates.YER;
-            if (curr === 'SAR') amtUSD = amtVal / DB.rates.SAR;
-
-            DB.counters.voucher++;
-            const v = {
-                id: Date.now(), vouchNo: 'V-' + DB.counters.voucher, date: new Date().toISOString(),
-                type: document.getElementById('v-type').value,
-                accCode: document.getElementById('v-acc').value || '101',
-                party: document.getElementById('v-party').value.trim(),
-                notes: document.getElementById('v-notes').value.trim(),
-                amtUSD: amtUSD, curr: curr, display: amtVal.toFixed(2) + ' ' + curr
-            };
-            await saveToCloud('vouchers', v.id, v);
-            e.target.reset(); closeModal('modal-vouchers'); openModal('modal-transactions');
-            showToast('تم حفظ السند', 'success');
-        }
-
-        async function handleTransferSubmit(e) {
-            e.preventDefault();
-            const from = document.getElementById('tr-from').value;
-            const to = document.getElementById('tr-to').value;
-            if (from === to) return showToast('لا يمكن التحويل لنفس الحساب', 'error');
-
-            const amtVal = parseFloat(document.getElementById('tr-amt').value);
-            if (!isFinite(amtVal) || amtVal <= 0) return showToast('أدخل مبلغاً صحيحاً', 'error');
-            const curr = document.getElementById('tr-curr').value;
-            let amtUSD = amtVal;
-            if (curr === 'YER') amtUSD = amtVal / DB.rates.YER;
-            if (curr === 'SAR') amtUSD = amtVal / DB.rates.SAR;
-
-            DB.counters.transfer++;
-            const fromAcc = DB.accs.find(a => a.code === from);
-            const toAcc = DB.accs.find(a => a.code === to);
-
-            const tr = {
-                id: Date.now(), trNo: 'T-' + DB.counters.transfer, date: new Date().toISOString(),
-                fromCode: from, fromName: fromAcc.name, toCode: to, toName: toAcc.name,
-                amtUSD: amtUSD, curr: curr, display: amtVal.toFixed(2) + ' ' + curr,
-                notes: document.getElementById('tr-notes').value.trim()
-            };
-            await saveToCloud('transfers', tr.id, tr);
-            e.target.reset(); closeModal('modal-transfer'); openModal('modal-transactions');
-            showToast('تم حفظ التحويل', 'success');
-        }
-
-        async function handleJournalSubmit(e) {
-            e.preventDefault();
-            const accCode = document.getElementById('je-acc').value;
-            const amtVal = parseFloat(document.getElementById('je-amt').value);
-            if (!isFinite(amtVal) || amtVal <= 0) return showToast('أدخل مبلغاً صحيحاً', 'error');
-            const curr = document.getElementById('je-curr').value;
-            let amtUSD = amtVal;
-            if (curr === 'YER') amtUSD = amtVal / DB.rates.YER;
-            if (curr === 'SAR') amtUSD = amtVal / DB.rates.SAR;
-
-            DB.counters.journal++;
-            const acc = DB.accs.find(a => a.code === accCode);
-            const je = {
-                id: Date.now(), jeNo: 'J-' + DB.counters.journal, date: new Date().toISOString(),
-                accCode: accCode, accName: acc.name,
-                type: document.getElementById('je-type').value,
-                amtUSD: amtUSD, curr: curr, display: amtVal.toFixed(2) + ' ' + curr,
-                notes: document.getElementById('je-notes').value.trim()
-            };
-            await saveToCloud('journal', je.id, je);
-            e.target.reset(); closeModal('modal-journal-entry'); openModal('modal-transactions');
-            showToast('تم حفظ القيد', 'success');
-        }
-
-        // ============================================================
-        // 5.5 Account Balances (محرك الأرصدة المحاسبية)
-        // ============================================================
-        // اصطلاح: الموجب = مدين، السالب = دائن
-        function computeAccountBalances() {
-            const bal = {};
-            DB.accs.forEach(a => bal[a.code] = 0);
-            const add = (code, amt) => { if (code && bal[code] !== undefined) bal[code] += amt; };
-
-            DB.journal.forEach(j => add(j.accCode, (j.type === 'DEPOSIT' ? 1 : -1) * (j.amtUSD || 0)));
-            DB.transfers.forEach(t => { add(t.toCode, t.amtUSD || 0); add(t.fromCode, -(t.amtUSD || 0)); });
-            DB.vouchers.forEach(v => add(v.accCode || '101', (v.type === 'RECEIPT' ? 1 : -1) * (v.amtUSD || 0)));
-
-            DB.sales.forEach(s => {
-                const amt = s.amtUSD || 0;
-                const cost = (s.costUSD || 0) * (s.qty || 0);
-                if (s.payType === 'CREDIT') add('102', amt); else add('101', amt);
-                add('401', amt);
-                add('103', -cost);
-                add('501', cost);
-            });
-
-            DB.purch.forEach(p => {
-                const amt = p.amtUSD || 0;
-                const cost = (p.costUSD || 0) * (p.qty || 0);
-                if (p.payType === 'CREDIT') add('201', -amt); else add('101', -amt);
-                add('103', cost);
-            });
-
-            return bal;
-        }
-
-        function partyBalances() {
-            const cust = {}, supp = {};
-            DB.sales.forEach(s => {
-                if (s.payType !== 'CREDIT') return;
-                const n = (s.customer || 'بدون اسم').trim();
-                cust[n] = (cust[n] || 0) + (s.amtUSD || 0);
-            });
-            DB.purch.forEach(p => {
-                if (p.payType !== 'CREDIT') return;
-                const n = (p.supplier || 'بدون اسم').trim();
-                supp[n] = (supp[n] || 0) + (p.amtUSD || 0);
-            });
-            return { customers: cust, suppliers: supp };
-        }
-
-        async function deleteSale(id) {
-            const s = DB.sales.find(x => x.id === id);
-            if (!s) return;
-            if (!confirm('حذف الفاتورة ' + s.invNo + '؟\nسيتم إرجاع الكمية للمخزون.')) return;
-            const item = DB.items.find(i => i.code === s.itemCode);
-            if (item) await saveToCloud('items', item.code, { ...item, qty: (item.qty || 0) + (s.qty || 0) });
-            await deleteFromCloud('sales', id, true);
-        }
-
-        async function deletePurch(id) {
-            const p = DB.purch.find(x => x.id === id);
-            if (!p) return;
-            if (!confirm('حذف الفاتورة ' + p.invNo + '؟\nسيتم خصم الكمية من المخزون.')) return;
-            const item = DB.items.find(i => i.code === p.itemCode);
-            if (item) {
-                const newQty = (item.qty || 0) - (p.qty || 0);
-                if (newQty < 0) return showToast('لا يمكن الحذف — الكمية المباعة تجاوزت المتاح', 'error');
-                await saveToCloud('items', item.code, { ...item, qty: newQty });
-            }
-            await deleteFromCloud('purch', id, true);
-        }
-
-        // ============================================================
-        // 6. Backup & Restore
-        // ============================================================
-        function backupDatabase() {
-            const backup = {
-                app: 'MahasibAlMadhyoub', version: '8.0', timestamp: new Date().toISOString(),
-                rates: DB.rates, items: DB.items, sales: DB.sales, purch: DB.purch, vouchers: DB.vouchers, transfers: DB.transfers, journal: DB.journal, customers: DB.customers, suppliers: DB.suppliers
-            };
-            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(backup, null, 2));
-            const a = document.createElement('a');
-            a.setAttribute('href', dataStr);
-            a.setAttribute('download', 'MahasibAlMadhyoub_Backup_' + Date.now() + '.json');
-            document.body.appendChild(a); a.click(); a.remove();
-            showToast('تم تصدير النسخة الاحتياطية', 'success');
-        }
-
-        function triggerRestoreInput() { document.getElementById('restoreFileInput').click(); }
-
-        async function restoreDatabase(event) {
-            const file = event.target.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (Array.isArray(imported.items)) DB.items = imported.items;
-                    if (Array.isArray(imported.sales)) DB.sales = imported.sales;
-                    if (Array.isArray(imported.purch)) DB.purch = imported.purch;
-                    if (Array.isArray(imported.vouchers)) DB.vouchers = imported.vouchers;
-                    if (Array.isArray(imported.transfers)) DB.transfers = imported.transfers;
-                    if (Array.isArray(imported.journal)) DB.journal = imported.journal;
-                    if (Array.isArray(imported.customers)) DB.customers = imported.customers;
-                    if (Array.isArray(imported.suppliers)) DB.suppliers = imported.suppliers;
-                    if (imported.rates) DB.rates = imported.rates;
-                    localStorage.setItem('alm_rates', JSON.stringify(DB.rates));
-
-                    renderAll();
-                    showToast('تم استرجاع البيانات للعرض', 'success');
-
-                    // رفع البيانات المسترجعة إلى Firestore حتى لا تضيع
-                    if (currentUser) {
-                        const cols = ['items', 'sales', 'purch', 'vouchers', 'transfers', 'journal', 'customers', 'suppliers'];
-                        let done = 0, total = 0;
-                        cols.forEach(c => total += (imported[c] || []).length);
-                        if (total === 0) return;
-                        showToast('جاري رفع ' + total + ' سجل إلى السحابة...', 'info');
-                        for (const c of cols) {
-                            for (const d of (imported[c] || [])) {
-                                const key = String(d.id || d.code);
-                                try { await setDoc(doc(db, "users", currentUser.uid, c, key), d); }
-                                catch (e) { console.error('restore push failed', c, key, e); }
-                                done++;
-                            }
-                        }
-                        showToast('تم رفع ' + done + ' سجل إلى السحابة', 'success');
-                    }
-                } catch (err) { showToast('ملف غير صالح', 'error'); }
-            };
-            reader.readAsText(file); event.target.value = '';
-        }
-
-        // ============================================================
-        // 7. Print, Share & Render
-        // ============================================================
-        function printDocument(type, data) {
-            const printArea = document.getElementById('print-area');
-            const dateStr = new Date(data.date).toLocaleString('ar-EG');
-            let body = `<div class="print-header"><h1>محاسب المذيوب</h1><p>إعداد م. عبدالقادر حسين</p><p>${type === 'sales' ? 'فاتورة مبيعات' : type === 'purch' ? 'فاتورة مشتريات' : 'سند/قيد'}</p></div>`;
-
-            if (type === 'sales' || type === 'purch') {
-                const isSale = type === 'sales';
-                body += `<table class="print-meta">
-                    <tr><td>رقم المستند:</td><td><strong>${escapeHtml(data.invNo)}</strong></td></tr>
-                    <tr><td>التاريخ:</td><td>${escapeHtml(dateStr)}</td></tr>
-                    <tr><td>${isSale ? 'العميل' : 'المورد'}:</td><td>${escapeHtml(isSale ? data.customer : data.supplier)}</td></tr>
-                </table>
-                <table class="print-items"><thead><tr><th>الصنف</th><th>الكمية</th><th>الإجمالي</th></tr></thead>
-                <tbody><tr><td>${escapeHtml(data.itemName)}</td><td>${data.qty}</td><td>${escapeHtml(data.display)}</td></tr></tbody></table>
-                <div class="print-total">الإجمالي: ${escapeHtml(data.display)}</div>`;
-            } else if (type === 'voucher') {
-                body += `<table class="print-meta"><tr><td>رقم السند:</td><td>${escapeHtml(data.vouchNo)}</td></tr><tr><td>الجهة:</td><td>${escapeHtml(data.party)}</td></tr><tr><td>البيان:</td><td>${escapeHtml(data.notes)}</td></tr></table>
-                <div class="print-total">المبلغ: ${escapeHtml(data.display)}</div>`;
-            } else if (type === 'transfer') {
-                body += `<table class="print-meta"><tr><td>رقم التحويل:</td><td>${escapeHtml(data.trNo)}</td></tr><tr><td>من:</td><td>${escapeHtml(data.fromName)}</td></tr><tr><td>إلى:</td><td>${escapeHtml(data.toName)}</td></tr></table>
-                <div class="print-total">المبلغ: ${escapeHtml(data.display)}</div>`;
-            } else {
-                body += `<table class="print-meta"><tr><td>رقم القيد:</td><td>${escapeHtml(data.jeNo)}</td></tr><tr><td>الحساب:</td><td>${escapeHtml(data.accName)}</td></tr></table>
-                <div class="print-total">المبلغ: ${escapeHtml(data.display)}</div>`;
-            }
-
-            printArea.innerHTML = body + `<div class="print-footer"><p>محاسب المذيوب - إعداد المهندس عبدالقادر حسين المذيوب</p></div>`;
-            setTimeout(() => window.print(), 100);
-        }
-
-        function shareDocument(type, id) {
-            let d, text = "";
-            if (type === 'sales') {
-                d = DB.sales.find(x => x.id === id);
-                if(d) text = `*محاسب المذيوب - فاتورة مبيعات*\nرقم: ${d.invNo}\nالعميل: ${d.customer}\nالصنف: ${d.itemName} (${d.qty})\nالإجمالي: ${d.display}`;
-            } else if (type === 'purch') {
-                d = DB.purch.find(x => x.id === id);
-                if(d) text = `*محاسب المذيوب - فاتورة مشتريات*\nرقم: ${d.invNo}\nالمورد: ${d.supplier}\nالصنف: ${d.itemName} (${d.qty})\nالإجمالي: ${d.display}`;
-            }
-            if (!text) return;
-
-            if (navigator.share) {
-                navigator.share({ title: 'مشاركة فاتورة', text: text }).catch(() => {});
-            } else {
-                window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
-            }
-        }
-
-        function renderTransactions() {
-            const filter = document.getElementById('tx-filter').value;
-            const search = document.getElementById('tx-search').value.trim().toLowerCase();
-            const all = [];
-            const add = (arr, kind, color, partyField, extraField) => arr.forEach(x => all.push({ kind, id: x.id, no: x.invNo||x.vouchNo||x.trNo||x.jeNo, date: x.date, party: x[partyField], extra: x[extraField]||'', display: x.display, color }));
-
-            if (filter === 'ALL' || filter === 'SALES') add(DB.sales, 'SALES', '#10b981', 'customer', 'itemName');
-            if (filter === 'ALL' || filter === 'PURCH') add(DB.purch, 'PURCH', '#f59e0b', 'supplier', 'itemName');
-            if (filter === 'ALL' || filter === 'VOUCHER') add(DB.vouchers, 'VOUCHER', '#06b6d4', 'party', 'notes');
-            if (filter === 'ALL' || filter === 'TRANSFER') DB.transfers.forEach(t => all.push({ kind: 'TRANSFER', id: t.id, no: t.trNo, date: t.date, party: t.fromName + ' ← ' + t.toName, display: t.display, color: '#4f46e5' }));
-            if (filter === 'ALL' || filter === 'JOURNAL') add(DB.journal, 'JOURNAL', '#ef4444', 'accName', 'notes');
-
-            let result = all.sort((a, b) => b.id - a.id);
-            if (search) result = result.filter(it => (it.no||'').toLowerCase().includes(search) || (it.party||'').toLowerCase().includes(search));
-
-            const container = document.getElementById('tx-list');
-            if (result.length === 0) return container.innerHTML = '<p style="text-align:center; padding:20px; color:#64748b;">لا توجد عمليات</p>';
-            
-            const labels = { SALES: 'مبيعات', PURCH: 'مشتريات', VOUCHER: 'سند', TRANSFER: 'تحويل', JOURNAL: 'قيد' };
-            container.innerHTML = result.map(it => `
-                <div style="padding:10px 4px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-                    <div><div style="font-weight:bold; font-size:13px;">${escapeHtml(it.no)} - ${labels[it.kind]}</div>
-                    <div style="font-size:11px; color:#64748b;">${escapeHtml(it.party)}</div></div>
-                    <div style="text-align:left;"><div style="font-weight:bold; color:${it.color};">${escapeHtml(it.display)}</div>
-                    <div style="display:flex; gap:4px; margin-top:4px;">
-                        <button onclick="window.app.print('${it.kind.toLowerCase()}', ${it.id})" style="font-size:11px; border:1px solid #ccc; padding:2px 6px; border-radius:4px;">🖨️</button>
-                        <button onclick="window.app.share('${it.kind.toLowerCase()}', ${it.id})" style="font-size:11px; border:1px solid #25D366; color:#25D366; background:#fff; padding:2px 6px; border-radius:4px;">🔗</button>
-                    </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderSalesList() {
-            const c = document.getElementById('sales-list-tbody');
-            if (DB.sales.length === 0) return c.innerHTML = '<p style="text-align:center; padding:20px;">لا توجد مبيعات</p>';
-            c.innerHTML = DB.sales.map(s => `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
-                <div><strong>${escapeHtml(s.invNo)}</strong><br><small>${escapeHtml(s.customer)}</small>${s.payType === 'CREDIT' ? ' <span style="background:#fef3c7;color:#b45309;font-size:10px;padding:1px 6px;border-radius:8px;">آجل</span>' : ''}</div>
-                <div style="text-align:left;"><span style="color:#10b981; font-weight:bold;">${escapeHtml(s.display)}</span><br>
-                <div style="display:flex; gap:4px; margin-top:4px; justify-content:flex-end;">
-                    <button onclick="window.app.print('sales', ${s.id})" style="font-size:11px; border:1px solid #ccc; padding:2px 6px; border-radius:4px;">🖨️</button>
-                    <button onclick="window.app.share('sales', ${s.id})" style="font-size:11px; border:1px solid #25D366; color:#25D366; background:#fff; padding:2px 6px; border-radius:4px;">🔗</button>
-                    <button onclick="window.app.delSale(${s.id})" style="font-size:11px; border:1px solid #ef4444; color:#ef4444; background:#fff; padding:2px 6px; border-radius:4px;">🗑️</button>
-                </div></div>
-            </div>`).join('');
-        }
-
-        function renderPurchasesList() {
-            const c = document.getElementById('purchases-list-tbody');
-            if (DB.purch.length === 0) return c.innerHTML = '<p style="text-align:center; padding:20px;">لا توجد مشتريات</p>';
-            c.innerHTML = DB.purch.map(p => `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;">
-                <div><strong>${escapeHtml(p.invNo)}</strong><br><small>${escapeHtml(p.supplier)}</small>${p.payType === 'CREDIT' ? ' <span style="background:#fef3c7;color:#b45309;font-size:10px;padding:1px 6px;border-radius:8px;">آجل</span>' : ''}</div>
-                <div style="text-align:left;"><span style="color:#f59e0b; font-weight:bold;">${escapeHtml(p.display)}</span><br>
-                <div style="display:flex; gap:4px; margin-top:4px; justify-content:flex-end;">
-                    <button onclick="window.app.print('purch', ${p.id})" style="font-size:11px; border:1px solid #ccc; padding:2px 6px; border-radius:4px;">🖨️</button>
-                    <button onclick="window.app.share('purch', ${p.id})" style="font-size:11px; border:1px solid #25D366; color:#25D366; background:#fff; padding:2px 6px; border-radius:4px;">🔗</button>
-                    <button onclick="window.app.delPurch(${p.id})" style="font-size:11px; border:1px solid #ef4444; color:#ef4444; background:#fff; padding:2px 6px; border-radius:4px;">🗑️</button>
-                </div></div>
-            </div>`).join('');
-        }
-
-        function renderItemsList(searchQuery = '') {
-            const c = document.getElementById('items-list-tbody');
-            let items = DB.items;
-            if (searchQuery) {
-                const q = searchQuery.toLowerCase();
-                items = items.filter(i => (i.name||'').toLowerCase().includes(q) || (i.code||'').toLowerCase().includes(q));
-            }
-            if (items.length === 0) return c.innerHTML = '<tr><td colspan="4" style="text-align:center;">لا توجد أصناف</td></tr>';
-            c.innerHTML = items.map(i => `<tr><td>${escapeHtml(i.code)}</td><td>${escapeHtml(i.name)}</td><td>${i.qty}</td><td>$${fmt(i.priceUSD)}</td></tr>`).join('');
-        }
-
-        function renderCustomersList(searchQuery = '') {
-            const c = document.getElementById('customers-list-tbody');
-            let customers = DB.customers;
-            if (searchQuery) {
-                const q = searchQuery.toLowerCase();
-                customers = customers.filter(cust => (cust.name||'').toLowerCase().includes(q) || (cust.phone||'').includes(q));
-            }
-            if (customers.length === 0) return c.innerHTML = '<tr><td colspan="3" style="text-align:center;">لا يوجد عملاء</td></tr>';
-            c.innerHTML = customers.map(cust => `<tr>
-                <td>${escapeHtml(cust.name)}</td>
-                <td>${escapeHtml(cust.phone || '-')}</td>
-                <td><button onclick="window.app.delete('customers', ${cust.id})" style="color:var(--danger); border:none; background:none; cursor:pointer;">🗑️</button></td>
-            </tr>`).join('');
-        }
-
-        function renderSuppliersList(searchQuery = '') {
-            const c = document.getElementById('suppliers-list-tbody');
-            let suppliers = DB.suppliers;
-            if (searchQuery) {
-                const q = searchQuery.toLowerCase();
-                suppliers = suppliers.filter(sup => (sup.name||'').toLowerCase().includes(q) || (sup.phone||'').includes(q));
-            }
-            if (suppliers.length === 0) return c.innerHTML = '<tr><td colspan="3" style="text-align:center;">لا يوجد موردين</td></tr>';
-            c.innerHTML = suppliers.map(sup => `<tr>
-                <td>${escapeHtml(sup.name)}</td>
-                <td>${escapeHtml(sup.phone || '-')}</td>
-                <td><button onclick="window.app.delete('suppliers', ${sup.id})" style="color:var(--danger); border:none; background:none; cursor:pointer;">🗑️</button></td>
-            </tr>`).join('');
-        }
-
-        function renderAll() {
-            const bal = computeAccountBalances();
-            document.getElementById('accounts-list-tbody').innerHTML = DB.accs.map(a => {
-                const b = bal[a.code] || 0;
-                const sign = b < 0 ? '-' : '';
-                return `<tr><td>${a.code}</td><td>${escapeHtml(a.name)}</td><td>${a.type}</td><td style="font-weight:bold; color:${b < 0 ? 'var(--danger)' : 'var(--success)'};">${sign}$${fmt(Math.abs(b))}</td></tr>`;
-            }).join('');
-
-            const pb = partyBalances();
-            const pbRows = [];
-            Object.entries(pb.customers).forEach(([n, v]) => pbRows.push(`<tr><td>${escapeHtml(n)}</td><td>عميل (مدين)</td><td style="color:var(--info); font-weight:bold;">$${fmt(v)}</td></tr>`));
-            Object.entries(pb.suppliers).forEach(([n, v]) => pbRows.push(`<tr><td>${escapeHtml(n)}</td><td>مورد (دائن)</td><td style="color:var(--warning); font-weight:bold;">$${fmt(v)}</td></tr>`));
-            document.getElementById('rep-party-balances').innerHTML = pbRows.length
-                ? pbRows.join('')
-                : '<tr><td colspan="3" style="text-align:center;">لا توجد أرصدة آجلة</td></tr>';
-
-            document.getElementById('rep-acc-balances').innerHTML = DB.accs.map(a => {
-                const b = bal[a.code] || 0;
-                const sign = b < 0 ? '-' : '';
-                return `<tr><td>${a.code}</td><td>${escapeHtml(a.name)}</td><td style="font-weight:bold;">${sign}$${fmt(Math.abs(b))}</td></tr>`;
-            }).join('');
-            renderItemsList(document.getElementById('search-items').value);
-            
-            document.getElementById('customers-list').innerHTML = DB.customers.map(c => `<option value="${escapeHtml(c.name)}">`).join('');
-            document.getElementById('suppliers-list').innerHTML = DB.suppliers.map(s => `<option value="${escapeHtml(s.name)}">`).join('');
-
-            const opts = DB.items.map((i, idx) => `<option value="${idx}">${escapeHtml(i.name)} (${i.qty})</option>`).join('');
-            document.getElementById('sales-item-select').innerHTML = opts || '<option>لا توجد أصناف</option>';
-            document.getElementById('purch-item-select').innerHTML = opts || '<option>لا توجد أصناف</option>';
-            calcSales(); calcPurch();
-
-            const totalSales = DB.sales.reduce((s, x) => s + x.amtUSD, 0);
-            const totalPurch = DB.purch.reduce((s, x) => s + x.amtUSD, 0);
-            const cogs = DB.sales.reduce((s, x) => s + (x.costUSD * x.qty), 0);
-            const cashIn = DB.vouchers.filter(v => v.type === 'RECEIPT').reduce((s, x) => s + x.amtUSD, 0);
-            const cashOut = DB.vouchers.filter(v => v.type === 'PAYMENT').reduce((s, x) => s + x.amtUSD, 0);
-
-            document.getElementById('rep-s').innerText = '$' + fmt(totalSales);
-            document.getElementById('rep-p').innerText = '$' + fmt(totalPurch);
-            document.getElementById('rep-cogs').innerText = '$' + fmt(cogs);
-            document.getElementById('rep-gp').innerText = '$' + fmt(totalSales - cogs);
-            document.getElementById('rep-cash').innerText = '$' + fmt(bal['101'] || 0) + '  (سندات: ' + fmt(cashIn - cashOut) + ')';
-
-            const ry = document.getElementById('rate-yer');
-            const rs = document.getElementById('rate-sar');
-            if (ry) ry.value = DB.rates.YER;
-            if (rs) rs.value = DB.rates.SAR;
-
-            if (document.getElementById('modal-customers').classList.contains('active')) renderCustomersList(document.getElementById('search-customers').value);
-            if (document.getElementById('modal-suppliers').classList.contains('active')) renderSuppliersList(document.getElementById('search-suppliers').value);
-        }
-
-        // ============================================================
-        // 9. Auth State Listener
-        // ============================================================
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                authScreen.style.display = 'none';
-                appWrapper.classList.add('active');
-                
-                saveUserToDirectory(user);
-                
-                if (user.email === ADMIN_EMAIL) {
-                    document.getElementById('adminMenuItem').style.display = 'flex';
-                } else {
-                    document.getElementById('adminMenuItem').style.display = 'none';
-                }
-
-                startListeners(user.uid);
-                showToast('مرحباً ' + user.email, 'success');
-            } else {
-                currentUser = null;
-                authScreen.style.display = 'flex';
-                appWrapper.classList.remove('active');
-                unsubs.forEach(u => u()); unsubs = [];
-                document.getElementById('auth-password').value = '';
-                authLoading.style.display = 'none';
-            }
-        });
-
-        window.app = { 
-            print: (type, id) => {
-                let d;
-                if (type === 'sales') d = DB.sales.find(x => x.id === id);
-                if (type === 'purch') d = DB.purch.find(x => x.id === id);
-                if (type === 'voucher') d = DB.vouchers.find(x => x.id === id);
-                if (type === 'transfer') d = DB.transfers.find(x => x.id === id);
-                if (type === 'journal') d = DB.journal.find(x => x.id === id);
-                if (d) printDocument(type, d);
-            },
-            share: (type, id) => shareDocument(type, id),
-            delete: (colName, id) => deleteFromCloud(colName, id),
-            delSale: (id) => deleteSale(id),
-            delPurch: (id) => deletePurch(id)
-        };
-
-        window.handleLogin = handleLogin;
-        window.handleSignup = handleSignup;
-        window.handleLogout = handleLogout;
-        window.toggleDrawer = toggleDrawer;
-        window.toggleAccordion = toggleAccordion;
-        window.openModal = openModal;
-        window.closeModal = closeModal;
-        window.calcSales = calcSales;
-        window.calcPurch = calcPurch;
-        window.handleItemSubmit = handleItemSubmit;
-        window.handleCustomerSubmit = handleCustomerSubmit;
-        window.handleSupplierSubmit = handleSupplierSubmit;
-        window.handleSalesSubmit = handleSalesSubmit;
-        window.handlePurchSubmit = handlePurchSubmit;
-        window.handleVoucherSubmit = handleVoucherSubmit;
-        window.handleTransferSubmit = handleTransferSubmit;
-        window.handleJournalSubmit = handleJournalSubmit;
-        window.showToast = showToast;
-        window.renderAll = renderAll;
-        window.renderCustomersList = renderCustomersList;
-        window.renderSuppliersList = renderSuppliersList;
-        window.renderTransactions = renderTransactions;
-        window.renderSalesList = renderSalesList;
-        window.renderPurchasesList = renderPurchasesList;
-        window.renderItemsList = renderItemsList;
-        window.updateRates = updateRates;
-        window.backupDatabase = backupDatabase;
-        window.triggerRestoreInput = triggerRestoreInput;
-        window.restoreDatabase = restoreDatabase;
-        window.clearAllCaches = clearAllCaches;
-    </script>
+    <script type="module" src="./app.js"></script>
 </body>
 </html>

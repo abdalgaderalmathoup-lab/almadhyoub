@@ -6,7 +6,7 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, on
 import { getFirestore, initializeFirestore, persistentLocalCache, collection, doc, setDoc, deleteDoc, onSnapshot, query, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBRFXVQ_GU3OMOHTp8SMo1KRKFW0o-TowU",
+    apiKey: "AIzaSyBRFXVq_GU3OMOHTp8SMo1KRKFW0o-TowU",
     authDomain: "almadhyoub-app.firebaseapp.com",
     projectId: "almadhyoub-app",
     storageBucket: "almadhyoub-app.firebasestorage.app",
